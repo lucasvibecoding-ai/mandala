@@ -539,7 +539,7 @@ export default function Home() {
             <h2 style={{ textAlign: 'center' }}>Try it risk-free</h2>
             <p style={{ fontSize: 20 }}><strong>You don&apos;t have to make the final decision now.</strong></p>
             <p style={{ textAlign: 'left', fontSize: 20 }}>Get access to the full course. Get your materials. Learn the foundational patterns. Draw your first mandala masterpiece. Watch your skills grow with every new piece.</p>
-            <p style={{ textAlign: 'left', fontSize: 20 }}>If you don&apos;t love it, email hello@mandalaclass.com within 90 days for a full refund. Within 24 hours. <strong>No questions asked.</strong></p>
+            <p style={{ textAlign: 'left', fontSize: 20 }}>If you don&apos;t love it, email hello@mandalapractice.com within 90 days for a full refund. Within 24 hours. <strong>No questions asked.</strong></p>
           </section>
 
           {/* BONUSES */}

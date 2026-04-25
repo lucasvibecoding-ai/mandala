@@ -99,8 +99,8 @@ export default function TermsPage() {
           <h2 className="text-2xl font-serif mb-3 text-cream">9. Contact</h2>
           <p>
             If you have any questions about these Terms, please contact us at{" "}
-            <a href="mailto:hello@mandalaclass.com" className="text-gold underline">
-              hello@mandalaclass.com
+            <a href="mailto:hello@mandalapractice.com" className="text-gold underline">
+              hello@mandalapractice.com
             </a>
           </p>
         </section>

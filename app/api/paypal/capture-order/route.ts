@@ -42,14 +42,14 @@ export async function POST(request: Request) {
     const data = await res.json();
 
     if (data.status === 'COMPLETED') {
-      const customerEmail = data.payer?.email_address || 'hello@mandalaclass.com';
+      const customerEmail = data.payer?.email_address || 'hello@mandalapractice.com';
 
       try {
         const html = await render(OrderConfirmation({ customerEmail }));
         const emailResult = await resend.emails.send({
-          from: 'Aiko Mori <hello@mandalaclass.com>',
+          from: 'Aiko Mori <hello@mandalapractice.com>',
           to: customerEmail,
-          replyTo: 'hello@mandalaclass.com',
+          replyTo: 'hello@mandalapractice.com',
           subject: 'About your course purchase. Important update',
           html,
         });

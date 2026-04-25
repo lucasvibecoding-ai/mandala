@@ -48,15 +48,15 @@ export async function POST(request: Request) {
       customerEmail = charge.billing_details?.email || null;
     }
 
-    const toEmail = customerEmail || 'hello@mandalaclass.com';
+    const toEmail = customerEmail || 'hello@mandalapractice.com';
     console.log(`Sending confirmation email to: ${toEmail} (receipt_email was: ${paymentIntent.receipt_email})`);
 
     try {
       const html = await render(OrderConfirmation({ customerEmail: toEmail }));
       const emailResult = await resend.emails.send({
-        from: 'Aiko Mori <hello@mandalaclass.com>',
+        from: 'Aiko Mori <hello@mandalapractice.com>',
         to: toEmail,
-        replyTo: 'hello@mandalaclass.com',
+        replyTo: 'hello@mandalapractice.com',
         subject: 'About your course purchase. Important update',
         html,
       });

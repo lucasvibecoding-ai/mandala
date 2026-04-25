@@ -73,7 +73,7 @@ export default function Success() {
             </li>
             <li className="flex items-start gap-3">
               <span className="font-bold flex-shrink-0" style={{ color: '#2d4a8f' }}>2.</span>
-              <span><strong className="text-cream">Add me to your contacts.</strong> Save <strong>hello@mandalaclass.com</strong> as a contact so future emails go straight to your inbox.</span>
+              <span><strong className="text-cream">Add me to your contacts.</strong> Save <strong>hello@mandalapractice.com</strong> as a contact so future emails go straight to your inbox.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="font-bold flex-shrink-0" style={{ color: '#2d4a8f' }}>3.</span>
@@ -82,8 +82,8 @@ export default function Success() {
           </ol>
           <p className="text-muted text-sm" style={{ opacity: 0.7 }}>
             Still nothing? Contact me at{" "}
-            <a href="mailto:hello@mandalaclass.com" className="text-gold underline">
-              hello@mandalaclass.com
+            <a href="mailto:hello@mandalapractice.com" className="text-gold underline">
+              hello@mandalapractice.com
             </a>
           </p>
         </div>
