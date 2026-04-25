@@ -8,7 +8,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing eventId' }, { status: 400 });
     }
 
-    const pixelId = '26662525143387687';
+    const pixelId = '1713180170119949';
     const accessToken = process.env.META_CAPI_ACCESS_TOKEN;
 
     if (!accessToken) {

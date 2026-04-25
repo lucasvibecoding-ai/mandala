@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       // Server-side CAPI Purchase event
       const capiToken = process.env.META_CAPI_ACCESS_TOKEN;
       if (capiToken) {
-        const pixelId = '26662525143387687';
+        const pixelId = '1713180170119949';
         const eventId = orderID;
         const forwardedFor = request.headers.get('x-forwarded-for') || '';
         const clientIp = forwardedFor.split(',')[0]?.trim() || undefined;
