@@ -48,7 +48,7 @@ export default function OrderConfirmation({ customerEmail }: OrderConfirmationPr
           </Text>
 
           <Text style={optionText}>
-            <strong>Option 2: Wait for the updated version.</strong> It&apos;s coming end of April. It&apos;s going to be incredible. As a thank you for your patience, I&apos;ll give you a <strong>steep discount</strong> on our private community once it opens. It&apos;s going to be a space for mandala enthusiasts, and you&apos;ll get in at a fraction of the price.
+            <strong>Option 2: Wait for the updated version.</strong> It&apos;s coming the first half of May. It&apos;s going to be incredible. As a thank you for your patience, I&apos;ll give you a <strong>steep discount</strong> on our private community once it opens. It&apos;s going to be a space for mandala enthusiasts, and you&apos;ll get in at a fraction of the price.
           </Text>
 
           <Hr style={divider} />
