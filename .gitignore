@@ -1,3 +1,4 @@
 .next
 node_modules
 .env.local
+globals.compiled.css

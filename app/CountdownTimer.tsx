@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 const TIMER_START_SECONDS = 38 * 60 + 33; // 38 minutes 33 seconds
-const STORAGE_KEY = 'sumie_timer_end';
+const STORAGE_KEY = 'mandala_timer_end';
 
 export default function CountdownTimer({ banner = false }: { banner?: boolean }) {
   const [secondsLeft, setSecondsLeft] = useState(TIMER_START_SECONDS);

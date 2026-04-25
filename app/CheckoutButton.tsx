@@ -18,7 +18,7 @@ export default function CheckoutButton() {
       window.fbq('track', 'InitiateCheckout', {
         value: 47.00,
         currency: 'USD',
-        content_name: 'Sumi-e Masterclass',
+        content_name: 'Mandala Masterclass',
         content_category: 'Online Course',
       }, { eventID: eventId });
     }

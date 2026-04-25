@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - Sumi-e Class",
+  title: "Privacy Policy - Mandala Class",
 };
 
 export default function PrivacyPage() {
@@ -84,8 +84,8 @@ export default function PrivacyPage() {
           <h2 className="text-2xl font-serif mb-3 text-cream">7. Contact</h2>
           <p>
             If you have any questions about this Privacy Policy, please contact us at{" "}
-            <a href="mailto:hello@sumieclass.com" className="text-gold underline">
-              hello@sumieclass.com
+            <a href="mailto:hello@mandalaclass.com" className="text-gold underline">
+              hello@mandalaclass.com
             </a>
           </p>
         </section>

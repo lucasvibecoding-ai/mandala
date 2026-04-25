@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Lora, Outfit } from "next/font/google";
-import "./globals.css";
+import "./globals.compiled.css";
 
 const lora = Lora({
   variable: "--font-lora",
@@ -15,9 +15,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Sumi-e: Learn The 700-Year Old Japanese Art Of Ink Painting",
+  title: "Mandala: Learn The Ancient Art Of Meditative Circle Drawing",
   description:
-    "Learn the ancient Japanese art of sumi-e ink painting at home with no experience. Create beautiful ink paintings on rice paper in under 2 hours.",
+    "Learn the ancient art of mandala drawing at home with no experience. Create beautiful sacred geometry pieces on paper in under 2 hours.",
   icons: {
     icon: "/favicon.png",
   },

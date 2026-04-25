@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 export default function PurchaseFlag() {
   useEffect(() => {
-    localStorage.setItem('bonsai_purchased', 'true');
+    localStorage.setItem('mandala_purchased', 'true');
   }, []);
 
   return null;

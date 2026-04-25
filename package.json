@@ -1,5 +1,5 @@
 {
-  "name": "bonsai-website",
+  "name": "mandala-website",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -21,6 +21,7 @@
     "stripe": "^20.4.1"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

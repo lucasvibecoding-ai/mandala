@@ -48,15 +48,15 @@ export async function POST(request: Request) {
       customerEmail = charge.billing_details?.email || null;
     }
 
-    const toEmail = customerEmail || 'hello@sumieclass.com';
+    const toEmail = customerEmail || 'hello@mandalaclass.com';
     console.log(`Sending confirmation email to: ${toEmail} (receipt_email was: ${paymentIntent.receipt_email})`);
 
     try {
       const html = await render(OrderConfirmation({ customerEmail: toEmail }));
       const emailResult = await resend.emails.send({
-        from: 'Aiko Mori <hello@sumieclass.com>',
+        from: 'Aiko Mori <hello@mandalaclass.com>',
         to: toEmail,
-        replyTo: 'hello@sumieclass.com',
+        replyTo: 'hello@mandalaclass.com',
         subject: 'About your course purchase. Important update',
         html,
       });
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
                 custom_data: {
                   value: 47.0,
                   currency: 'USD',
-                  content_name: 'Sumi-e Masterclass',
+                  content_name: 'Mandala Masterclass',
                   content_type: 'product',
                 },
               },

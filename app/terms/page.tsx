@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service - Sumi-e Class",
+  title: "Terms of Service - Mandala Class",
 };
 
 export default function TermsPage() {
@@ -16,7 +16,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-serif mb-3 text-cream">1. Overview</h2>
           <p>
-            By purchasing and accessing the Sumi-e Masterclass (&quot;the Course&quot;),
+            By purchasing and accessing the Mandala Masterclass (&quot;the Course&quot;),
             you agree to be bound by these Terms of Service. If you do not agree to these
             terms, please do not purchase or use the Course.
           </p>
@@ -60,7 +60,7 @@ export default function TermsPage() {
           <h2 className="text-2xl font-serif mb-3 text-cream">5. Intellectual Property</h2>
           <p>
             All Course content, including videos, text, images, templates, and
-            downloadable materials, is the intellectual property of Sumi-e Class
+            downloadable materials, is the intellectual property of Mandala Class
             and is protected by copyright law. Purchasing the Course does not
             transfer ownership of any intellectual property.
           </p>
@@ -79,9 +79,9 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-serif mb-3 text-cream">7. Liability</h2>
           <p>
-            Sumi-e involves working with ink, brushes, and related materials.
+            Mandala drawing involves working with pens, ink, and related materials.
             You are solely responsible for following proper safety procedures.
-            Sumi-e Class is not liable for any issues that may arise from
+            Mandala Class is not liable for any issues that may arise from
             following the techniques taught in the Course.
           </p>
         </section>
@@ -99,8 +99,8 @@ export default function TermsPage() {
           <h2 className="text-2xl font-serif mb-3 text-cream">9. Contact</h2>
           <p>
             If you have any questions about these Terms, please contact us at{" "}
-            <a href="mailto:hello@sumieclass.com" className="text-gold underline">
-              hello@sumieclass.com
+            <a href="mailto:hello@mandalaclass.com" className="text-gold underline">
+              hello@mandalaclass.com
             </a>
           </p>
         </section>

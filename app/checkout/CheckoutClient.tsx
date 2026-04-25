@@ -403,7 +403,7 @@ export default function CheckoutClient() {
               Back
             </a>
 
-            <div className="product-title">Sumi-e Masterclass</div>
+            <div className="product-title">Mandala Masterclass</div>
             <div className="product-price">
               $47.00<span className="currency">USD</span>
             </div>
@@ -418,23 +418,23 @@ export default function CheckoutClient() {
             <div className="summary-divider" />
 
             <div className="line-item">
-              <span className="item-name">Sumi-e Masterclass (5 Modules)</span>
+              <span className="item-name">Mandala Masterclass (5 Modules)</span>
               <span className="item-price">$47.00</span>
             </div>
             <div className="line-item">
-              <span className="item-name">The Paper Guide</span>
+              <span className="item-name">10 Printable Mandala Templates</span>
               <span className="item-price">FREE</span>
             </div>
             <div className="line-item">
-              <span className="item-name">The Brush Care &amp; Restoration Guide</span>
+              <span className="item-name">The Intention Series: 10 Ritual Templates</span>
               <span className="item-price">FREE</span>
             </div>
             <div className="line-item">
-              <span className="item-name">The Seal &amp; Signature Guide</span>
+              <span className="item-name">The Color Harmony Guide</span>
               <span className="item-price">FREE</span>
             </div>
             <div className="line-item">
-              <span className="item-name">Brushstroke Library: 15 Subjects</span>
+              <span className="item-name">The Master Color Series: 10 Colored Mandalas</span>
               <span className="item-price">FREE</span>
             </div>
 

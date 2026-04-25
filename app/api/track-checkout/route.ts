@@ -33,7 +33,7 @@ export async function POST(request: Request) {
               custom_data: {
                 value: 47.0,
                 currency: 'USD',
-                content_name: 'Sumi-e Masterclass',
+                content_name: 'Mandala Masterclass',
                 content_category: 'Online Course',
               },
             },

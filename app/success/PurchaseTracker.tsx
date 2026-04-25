@@ -32,7 +32,7 @@ export default function PurchaseTracker() {
       window.fbq('track', 'Purchase', {
         value: 47.00,
         currency: 'USD',
-        content_name: 'Sumi-e Masterclass',
+        content_name: 'Mandala Masterclass',
         content_type: 'product',
       }, { eventID: eventId });
     }

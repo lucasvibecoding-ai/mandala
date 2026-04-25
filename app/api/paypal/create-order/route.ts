@@ -20,7 +20,7 @@ async function getAccessToken() {
 export async function POST(request: Request) {
   try {
     await request.json().catch(() => ({}));
-    const description = 'Sumi-e Masterclass';
+    const description = 'Mandala Masterclass';
 
     const accessToken = await getAccessToken();
 

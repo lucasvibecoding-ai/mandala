@@ -4,7 +4,7 @@ import PurchaseFlag from "./PurchaseFlag";
 import PurchaseTracker from "./PurchaseTracker";
 
 export const metadata: Metadata = {
-  title: "You're In! - Sumi-e Masterclass",
+  title: "You're In! - Mandala Masterclass",
 };
 
 export default function Success() {
@@ -50,7 +50,7 @@ export default function Success() {
             </li>
             <li className="flex items-start gap-3">
               <span className="text-gold font-bold flex-shrink-0">2.</span>
-              <span>Start with <strong className="text-cream">Module 1</strong> to learn the history and foundations of sumi-e</span>
+              <span>Start with <strong className="text-cream">Module 1</strong> to learn the history and foundations of mandala art</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="text-gold font-bold flex-shrink-0">3.</span>
@@ -73,7 +73,7 @@ export default function Success() {
             </li>
             <li className="flex items-start gap-3">
               <span className="font-bold flex-shrink-0" style={{ color: '#2d4a8f' }}>2.</span>
-              <span><strong className="text-cream">Add me to your contacts.</strong> Save <strong>hello@sumieclass.com</strong> as a contact so future emails go straight to your inbox.</span>
+              <span><strong className="text-cream">Add me to your contacts.</strong> Save <strong>hello@mandalaclass.com</strong> as a contact so future emails go straight to your inbox.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="font-bold flex-shrink-0" style={{ color: '#2d4a8f' }}>3.</span>
@@ -82,8 +82,8 @@ export default function Success() {
           </ol>
           <p className="text-muted text-sm" style={{ opacity: 0.7 }}>
             Still nothing? Contact me at{" "}
-            <a href="mailto:hello@sumieclass.com" className="text-gold underline">
-              hello@sumieclass.com
+            <a href="mailto:hello@mandalaclass.com" className="text-gold underline">
+              hello@mandalaclass.com
             </a>
           </p>
         </div>

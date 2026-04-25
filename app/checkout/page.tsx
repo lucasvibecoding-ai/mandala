@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import CheckoutClient from './CheckoutClient';
 
 export const metadata: Metadata = {
-  title: 'Checkout - Sumi-e Masterclass',
+  title: 'Checkout - Mandala Masterclass',
   description: 'Complete your purchase',
 };
 
