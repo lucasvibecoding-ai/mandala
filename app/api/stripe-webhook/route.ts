@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import { createHash } from 'crypto';
 import OrderConfirmation from '../../../emails/OrderConfirmation';
+import { recordPurchase } from '../../../lib/airtable';
 
 const sha256 = (value: string) =>
   createHash('sha256').update(value.trim().toLowerCase()).digest('hex');
@@ -42,13 +43,16 @@ export async function POST(request: Request) {
     }
 
     let customerEmail = paymentIntent.receipt_email;
+    let customerName: string | null = null;
 
-    if (!customerEmail && paymentIntent.latest_charge) {
+    if (paymentIntent.latest_charge) {
       const charge = await stripe.charges.retrieve(paymentIntent.latest_charge as string);
-      customerEmail = charge.billing_details?.email || null;
+      customerEmail = customerEmail || charge.billing_details?.email || null;
+      customerName = charge.billing_details?.name || null;
     }
 
     const toEmail = customerEmail || 'hello@mandalapractice.com';
+    const firstName = customerName?.split(' ')[0];
     console.log(`Sending confirmation email to: ${toEmail} (receipt_email was: ${paymentIntent.receipt_email})`);
 
     try {
@@ -63,6 +67,17 @@ export async function POST(request: Request) {
       console.log(`Email sent successfully to ${toEmail}:`, emailResult);
     } catch (emailErr) {
       console.error(`Failed to send email to ${toEmail}:`, emailErr);
+    }
+
+    if (customerEmail) {
+      await recordPurchase({
+        transactionId: paymentIntent.id,
+        date: new Date(paymentIntent.created * 1000),
+        amount: paymentIntent.amount / 100,
+        provider: 'Stripe',
+        email: customerEmail,
+        firstName,
+      });
     }
 
     // Server-side CAPI Purchase event
