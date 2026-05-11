@@ -55,49 +55,8 @@ export async function POST(request: Request) {
     const firstName = customerName?.split(' ')[0];
     console.log(`Sending confirmation email to: ${toEmail} (receipt_email was: ${paymentIntent.receipt_email})`);
 
-    // Grant access on the course platform — get back a per-buyer URL to embed
-    // in the confirmation email so the buyer gets a single message with a CTA.
-    let setupUrl: string | undefined;
-    let loginUrl: string | undefined;
     try {
-      if (
-        process.env.COURSE_PLATFORM_URL &&
-        process.env.COURSE_PLATFORM_SECRET &&
-        customerEmail
-      ) {
-        const grantRes = await fetch(
-          `${process.env.COURSE_PLATFORM_URL}/api/grant-access`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${process.env.COURSE_PLATFORM_SECRET}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: customerEmail,
-              courseSlug: 'mandala-masterclass',
-            }),
-          }
-        );
-        if (grantRes.ok) {
-          const data = (await grantRes.json()) as {
-            actionUrl?: string;
-            isNewUser?: boolean;
-          };
-          if (data.actionUrl) {
-            if (data.isNewUser) setupUrl = data.actionUrl;
-            else loginUrl = data.actionUrl;
-          }
-        } else {
-          console.error('grant-access failed:', grantRes.status, await grantRes.text());
-        }
-      }
-    } catch (err) {
-      console.error('grant-access error:', err);
-    }
-
-    try {
-      const html = await render(OrderConfirmation({ customerEmail: toEmail, setupUrl, loginUrl }));
+      const html = await render(OrderConfirmation({ customerEmail: toEmail }));
       const emailResult = await resend.emails.send({
         from: 'Aiko Mori <hello@mandalapractice.com>',
         to: toEmail,
