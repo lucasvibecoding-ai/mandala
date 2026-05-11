@@ -45,8 +45,49 @@ export async function POST(request: Request) {
     if (data.status === 'COMPLETED') {
       const customerEmail = data.payer?.email_address || 'hello@mandalapractice.com';
 
+      // Grant access on the course platform — get back a per-buyer URL to embed
+      // in the confirmation email so the buyer gets a single message with a CTA.
+      let setupUrl: string | undefined;
+      let loginUrl: string | undefined;
       try {
-        const html = await render(OrderConfirmation({ customerEmail }));
+        if (
+          process.env.COURSE_PLATFORM_URL &&
+          process.env.COURSE_PLATFORM_SECRET &&
+          data.payer?.email_address
+        ) {
+          const grantRes = await fetch(
+            `${process.env.COURSE_PLATFORM_URL}/api/grant-access`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${process.env.COURSE_PLATFORM_SECRET}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: data.payer.email_address,
+                courseSlug: 'mandala-masterclass',
+              }),
+            }
+          );
+          if (grantRes.ok) {
+            const granted = (await grantRes.json()) as {
+              actionUrl?: string;
+              isNewUser?: boolean;
+            };
+            if (granted.actionUrl) {
+              if (granted.isNewUser) setupUrl = granted.actionUrl;
+              else loginUrl = granted.actionUrl;
+            }
+          } else {
+            console.error('grant-access failed:', grantRes.status, await grantRes.text());
+          }
+        }
+      } catch (err) {
+        console.error('grant-access error:', err);
+      }
+
+      try {
+        const html = await render(OrderConfirmation({ customerEmail, setupUrl, loginUrl }));
         const emailResult = await resend.emails.send({
           from: 'Aiko Mori <hello@mandalapractice.com>',
           to: customerEmail,
