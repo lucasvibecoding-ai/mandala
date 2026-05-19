@@ -244,7 +244,7 @@ export default function Home() {
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 28, gap: 12 }}>
               <div id="hero" style={{ width: '90%', maxWidth: 640, aspectRatio: '1/1', borderRadius: 16, overflow: 'hidden', position: 'relative', boxShadow: '0 12px 40px rgba(26,45,107,0.3), 0 4px 12px rgba(0,0,0,0.1)' }}>
-                <Image src="/hero.webp" alt="Mandala Masterclass" fill style={{ objectFit: 'cover' }} />
+                <Image src="/fill_pic6.webp" alt="Mandala Masterclass" fill style={{ objectFit: 'cover' }} />
               </div>
               <div className="below-hero-row" style={{ display: 'flex', gap: 12, width: '90%', maxWidth: 640 }}>
                 <div style={{ flex: 1, aspectRatio: '1/1', borderRadius: 12, overflow: 'hidden', position: 'relative', boxShadow: '0 6px 20px rgba(26,45,107,0.2)' }}>
@@ -325,7 +325,7 @@ export default function Home() {
               <Image src="/fill_pic5.webp" alt="Mandala example 5" fill style={{ objectFit: 'cover' }} />
             </div>
             <div style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '1/1', position: 'relative' }}>
-              <Image src="/fill_pic6.webp" alt="Mandala example 6" fill style={{ objectFit: 'cover' }} />
+              <Image src="/hero.webp" alt="Mandala example 6" fill style={{ objectFit: 'cover' }} />
             </div>
             <div style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '1/1', position: 'relative' }}>
               <Image src="/fill_pic7.webp" alt="Mandala example 7" fill style={{ objectFit: 'cover' }} />
