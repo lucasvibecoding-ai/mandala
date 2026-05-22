@@ -288,10 +288,15 @@ export default function CheckoutClient() {
           border: 1px solid rgba(0,0,0,0.06);
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+          .order-bump {
+            flex-wrap: wrap;
+          }
           .order-bump .bump-image {
-            width: 64px;
-            height: 64px;
+            order: 3;
+            width: 140px;
+            height: 140px;
+            margin: 10px auto 0;
           }
         }
 
