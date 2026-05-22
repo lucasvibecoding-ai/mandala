@@ -14,7 +14,7 @@ const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
 const EMAIL_ERROR = 'Please enter a valid email address above to continue.';
 
-export default function StripeForm({ email, onEmailChange, paypalEmail, totalLabel, includeBump }: { email: string; onEmailChange: (v: string) => void; paypalEmail: string; totalLabel: string; includeBump: boolean }) {
+export default function StripeForm({ email, onEmailChange, paypalEmail, totalLabel, includeBump, paymentIntentId }: { email: string; onEmailChange: (v: string) => void; paypalEmail: string; totalLabel: string; includeBump: boolean; paymentIntentId: string }) {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -38,6 +38,23 @@ export default function StripeForm({ email, onEmailChange, paypalEmail, totalLab
     setCardError('');
   };
 
+  // Defensive: force the PaymentIntent's amount + metadata to match the
+  // current bump state right before any confirm. Prevents a race where the
+  // buyer toggles the bump and immediately clicks Pay before the on-toggle
+  // useEffect update has reached the server.
+  const ensurePIAmountSynced = async () => {
+    if (!paymentIntentId) return;
+    try {
+      await fetch('/api/update-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentIntentId, includeBump }),
+      });
+    } catch (err) {
+      console.error('ensurePIAmountSynced failed:', err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailValid) {
@@ -48,6 +65,8 @@ export default function StripeForm({ email, onEmailChange, paypalEmail, totalLab
 
     clearErrors();
     setIsProcessing(true);
+
+    await ensurePIAmountSynced();
 
     const { error: submitError } = await stripe.confirmPayment({
       elements,
@@ -72,6 +91,8 @@ export default function StripeForm({ email, onEmailChange, paypalEmail, totalLab
     clearErrors();
     setIsProcessing(true);
 
+    await ensurePIAmountSynced();
+
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -86,11 +107,17 @@ export default function StripeForm({ email, onEmailChange, paypalEmail, totalLab
     }
   };
 
-  const onExpressCheckoutClick = (event: StripeExpressCheckoutElementClickEvent) => {
+  const onExpressCheckoutClick = async (
+    event: StripeExpressCheckoutElementClickEvent
+  ) => {
     if (!emailValid) {
       showExpressEmailError();
       return;
     }
+    // Apple/Google Pay reads the amount from the PaymentIntent when the
+    // sheet opens. Sync the bump state to the PI before letting the sheet
+    // render so the buyer sees and confirms the right total.
+    await ensurePIAmountSynced();
     event.resolve();
   };
 
