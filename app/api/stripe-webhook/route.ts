@@ -55,6 +55,14 @@ export async function POST(request: Request) {
     const firstName = customerName?.split(' ')[0];
     console.log(`Sending confirmation email to: ${toEmail} (receipt_email was: ${paymentIntent.receipt_email})`);
 
+    // metadata.includes_addon is set by the order-bump checkout when the
+    // buyer added the Mandala Pack — forward the slug to aikoarts so the
+    // grant-access call records both the course enrollment and the addon.
+    const addonSlug =
+      typeof paymentIntent.metadata?.includes_addon === 'string'
+        ? paymentIntent.metadata.includes_addon
+        : null;
+
     // Grant access on the course platform — get back a per-buyer URL to embed
     // in the confirmation email so the buyer gets a single message with a CTA.
     let setupUrl: string | undefined;
@@ -76,6 +84,7 @@ export async function POST(request: Request) {
             body: JSON.stringify({
               email: customerEmail,
               courseSlug: 'mandala-masterclass',
+              ...(addonSlug ? { addonSlug } : {}),
             }),
           }
         );

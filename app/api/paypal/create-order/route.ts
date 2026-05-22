@@ -19,8 +19,16 @@ async function getAccessToken() {
 
 export async function POST(request: Request) {
   try {
-    await request.json().catch(() => ({}));
-    const description = 'Mandala Masterclass';
+    const body = (await request.json().catch(() => ({}))) as {
+      includeBump?: boolean;
+    };
+    const includeBump = body.includeBump === true;
+
+    const baseDescription = 'Mandala Masterclass';
+    const description = includeBump
+      ? `${baseDescription} + Mandala Pack`
+      : baseDescription;
+    const value = includeBump ? '66.99' : '47.00';
 
     const accessToken = await getAccessToken();
 
@@ -36,9 +44,12 @@ export async function POST(request: Request) {
           {
             amount: {
               currency_code: 'USD',
-              value: '47.00',
+              value,
             },
             description,
+            // custom_id flags whether the bump was bought so capture-order can
+            // grant the addon access on aikoarts after capture.
+            custom_id: includeBump ? 'includes_addon=mandala-pack' : 'base_only',
           },
         ],
       }),

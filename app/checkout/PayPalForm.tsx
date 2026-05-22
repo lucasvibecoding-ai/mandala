@@ -5,7 +5,7 @@ import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
-export default function PayPalForm({ email, onEmailError }: { email: string; onEmailError: () => void }) {
+export default function PayPalForm({ email, onEmailError, includeBump }: { email: string; onEmailError: () => void; includeBump: boolean }) {
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
   const rejectedForEmail = useRef(false);
 
@@ -42,7 +42,7 @@ export default function PayPalForm({ email, onEmailError }: { email: string; onE
           const res = await fetch('/api/paypal/create-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
+            body: JSON.stringify({ includeBump }),
           });
           const data = await res.json();
           return data.id;

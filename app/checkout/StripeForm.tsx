@@ -14,7 +14,7 @@ const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
 const EMAIL_ERROR = 'Please enter a valid email address above to continue.';
 
-export default function StripeForm({ email, onEmailChange, paypalEmail }: { email: string; onEmailChange: (v: string) => void; paypalEmail: string }) {
+export default function StripeForm({ email, onEmailChange, paypalEmail, totalLabel, includeBump }: { email: string; onEmailChange: (v: string) => void; paypalEmail: string; totalLabel: string; includeBump: boolean }) {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -114,7 +114,7 @@ export default function StripeForm({ email, onEmailChange, paypalEmail }: { emai
       />
 
       <div style={{ marginTop: 12 }}>
-        <PayPalForm email={paypalEmail} onEmailError={showExpressEmailError} />
+        <PayPalForm email={paypalEmail} onEmailError={showExpressEmailError} includeBump={includeBump} />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
@@ -156,7 +156,7 @@ export default function StripeForm({ email, onEmailChange, paypalEmail }: { emai
             letterSpacing: '0.01em',
           }}
         >
-          {isProcessing ? 'Processing...' : 'Pay $47.00'}
+          {isProcessing ? 'Processing...' : `Pay ${totalLabel}`}
         </button>
       </form>
     </div>

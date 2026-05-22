@@ -45,6 +45,13 @@ export async function POST(request: Request) {
     if (data.status === 'COMPLETED') {
       const customerEmail = data.payer?.email_address || 'hello@mandalapractice.com';
 
+      // Look at the custom_id we stamped on the PayPal order to decide whether
+      // the buyer added the Mandala Pack bump.
+      const customId = data.purchase_units?.[0]?.custom_id as string | undefined;
+      const addonSlug = customId?.startsWith('includes_addon=')
+        ? customId.slice('includes_addon='.length)
+        : null;
+
       // Grant access on the course platform — get back a per-buyer URL to embed
       // in the confirmation email so the buyer gets a single message with a CTA.
       let setupUrl: string | undefined;
@@ -66,6 +73,7 @@ export async function POST(request: Request) {
               body: JSON.stringify({
                 email: data.payer.email_address,
                 courseSlug: 'mandala-masterclass',
+                ...(addonSlug ? { addonSlug } : {}),
               }),
             }
           );
