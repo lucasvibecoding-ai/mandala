@@ -595,7 +595,7 @@ export default function CheckoutClient() {
                       },
                     }}
                   >
-                    <StripeForm email={email} onEmailChange={setEmail} paypalEmail={email} />
+                    <StripeForm email={email} onEmailChange={setEmail} paypalEmail={email} totalLabel={totalFormatted} />
                   </Elements>
                 )}
               </div>
