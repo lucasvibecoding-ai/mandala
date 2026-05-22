@@ -278,6 +278,23 @@ export default function CheckoutClient() {
           flex-shrink: 0;
         }
 
+        .order-bump .bump-image {
+          width: 84px;
+          height: 84px;
+          object-fit: cover;
+          border-radius: 6px;
+          flex-shrink: 0;
+          background: #ffffff;
+          border: 1px solid rgba(0,0,0,0.06);
+        }
+
+        @media (max-width: 480px) {
+          .order-bump .bump-image {
+            width: 64px;
+            height: 64px;
+          }
+        }
+
         .order-bump .bump-body {
           flex: 1;
           min-width: 0;
@@ -541,6 +558,12 @@ export default function CheckoutClient() {
                   type="checkbox"
                   checked={bumpSelected}
                   onChange={(e) => setBumpSelected(e.target.checked)}
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/mandalas.webp"
+                  alt=""
+                  className="bump-image"
                 />
                 <div className="bump-body">
                   <div className="bump-headline">
