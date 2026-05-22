@@ -248,15 +248,20 @@ export default function CheckoutClient() {
         }
 
         .order-bump {
-          display: flex;
-          gap: 14px;
+          display: grid;
+          grid-template-columns: auto auto 1fr;
+          grid-template-areas:
+            "check image headline"
+            "check image sub";
+          column-gap: 14px;
+          row-gap: 4px;
           padding: 16px;
           border: 2px dashed #d4a72c;
           background: #fffbeb;
           border-radius: 8px;
           cursor: pointer;
           transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
-          align-items: flex-start;
+          align-items: start;
         }
 
         .order-bump:hover {
@@ -270,42 +275,27 @@ export default function CheckoutClient() {
         }
 
         .order-bump input[type="checkbox"] {
+          grid-area: check;
           width: 20px;
           height: 20px;
           margin-top: 2px;
           accent-color: #b97c0e;
           cursor: pointer;
-          flex-shrink: 0;
         }
 
         .order-bump .bump-image {
+          grid-area: image;
           width: 84px;
           height: 84px;
           object-fit: cover;
           border-radius: 6px;
-          flex-shrink: 0;
           background: #ffffff;
           border: 1px solid rgba(0,0,0,0.06);
-        }
-
-        @media (max-width: 768px) {
-          .order-bump {
-            flex-wrap: wrap;
-          }
-          .order-bump .bump-image {
-            order: 3;
-            width: 140px;
-            height: 140px;
-            margin: 10px auto 0;
-          }
-        }
-
-        .order-bump .bump-body {
-          flex: 1;
-          min-width: 0;
+          align-self: center;
         }
 
         .order-bump .bump-headline {
+          grid-area: headline;
           font-size: 15px;
           font-weight: 600;
           color: #1a2e1a;
@@ -318,10 +308,31 @@ export default function CheckoutClient() {
         }
 
         .order-bump .bump-sub {
+          grid-area: sub;
           font-size: 13px;
           color: #6b7c93;
-          margin-top: 4px;
           line-height: 1.5;
+          margin-top: 2px;
+        }
+
+        @media (max-width: 768px) {
+          .order-bump {
+            grid-template-columns: auto 1fr;
+            grid-template-areas:
+              "check headline"
+              "image image"
+              "sub   sub";
+            row-gap: 10px;
+          }
+          .order-bump .bump-image {
+            width: 160px;
+            height: 160px;
+            justify-self: center;
+            align-self: center;
+          }
+          .order-bump .bump-sub {
+            margin-top: 0;
+          }
         }
 
         .bump-line-item .item-name,
@@ -570,13 +581,11 @@ export default function CheckoutClient() {
                   alt=""
                   className="bump-image"
                 />
-                <div className="bump-body">
-                  <div className="bump-headline">
-                    <span className="bump-yes">YES!</span> Add the Mandala Pack — 150 printable mandalas — for just $19.99
-                  </div>
-                  <div className="bump-sub">
-                    A one-time upgrade. Lifetime access to 150 ready-to-color mandala designs alongside your masterclass.
-                  </div>
+                <div className="bump-headline">
+                  <span className="bump-yes">YES!</span> Add the Mandala Pack — 150 printable mandalas — for just $19.99
+                </div>
+                <div className="bump-sub">
+                  A one-time upgrade. Lifetime access to 150 ready-to-color mandala designs alongside your masterclass.
                 </div>
               </label>
 
