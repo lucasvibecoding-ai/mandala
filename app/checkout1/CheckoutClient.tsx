@@ -317,17 +317,16 @@ export default function CheckoutClient() {
 
         @media (max-width: 768px) {
           .order-bump {
-            grid-template-columns: auto 1fr;
+            grid-template-columns: auto 1fr auto;
             grid-template-areas:
-              "check headline"
-              "image image"
-              "sub   sub";
+              "check headline image"
+              "sub   sub      sub";
             row-gap: 10px;
           }
           .order-bump .bump-image {
-            width: 160px;
-            height: 160px;
-            justify-self: center;
+            width: 84px;
+            height: 84px;
+            justify-self: end;
             align-self: center;
           }
           .order-bump .bump-sub {
