@@ -16,6 +16,7 @@ export default function CourseAccessButton() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'hidden'>('loading');
   const [actionUrl, setActionUrl] = useState('');
   const [isNewUser, setIsNewUser] = useState(false);
+  const [email, setEmail] = useState('');
   const fired = useRef(false);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function CourseAccessButton() {
         if (d?.actionUrl) {
           setActionUrl(d.actionUrl);
           setIsNewUser(!!d.isNewUser);
+          setEmail(d.email || '');
           setStatus('ready');
         } else {
           setStatus('hidden');
@@ -76,20 +78,27 @@ export default function CourseAccessButton() {
 
   return (
     <div
-      className="rounded-xl p-6 sm:p-8 space-y-3 text-center"
+      className="rounded-xl p-6 sm:p-8 text-center"
       style={{ background: '#fff', border: '2px solid rgba(45,74,143,0.3)' }}
     >
       <p style={{ color: '#6b7089', margin: 0 }}>
         {isNewUser ? 'Set your password and jump straight in:' : 'Your course is ready:'}
       </p>
-      <a
-        href={actionUrl}
-        className="inline-block w-full sm:w-auto px-10 py-4 rounded-lg text-lg font-medium transition-all hover:shadow-lg"
-        style={{ background: '#2d4a8f', color: '#ffffff', textDecoration: 'none' }}
-      >
-        {isNewUser ? 'Set up your account' : 'Log in to your course'}
-      </a>
-      <p style={{ color: '#9a9489', fontSize: 13, margin: 0 }}>
+      {email ? (
+        <p style={{ color: '#1a1f3d', margin: '14px 0 0', fontSize: 15 }}>
+          Your login email is <strong>{email}</strong>
+        </p>
+      ) : null}
+      <div style={{ marginTop: 20 }}>
+        <a
+          href={actionUrl}
+          className="inline-block w-full sm:w-auto px-10 py-4 rounded-lg text-lg font-medium transition-all hover:shadow-lg"
+          style={{ background: '#2d4a8f', color: '#ffffff', textDecoration: 'none' }}
+        >
+          {isNewUser ? 'Set up your account' : 'Log in to your course'}
+        </a>
+      </div>
+      <p style={{ color: '#9a9489', fontSize: 13, margin: '16px 0 0' }}>
         We also emailed you this link, so you can get back in anytime.
       </p>
     </div>

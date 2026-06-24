@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     const data = (await grantRes.json()) as { actionUrl?: string; isNewUser?: boolean };
     if (!data.actionUrl) return NextResponse.json({ ready: false });
 
-    return NextResponse.json({ actionUrl: data.actionUrl, isNewUser: !!data.isNewUser });
+    return NextResponse.json({ actionUrl: data.actionUrl, isNewUser: !!data.isNewUser, email });
   } catch (err) {
     console.error('course-access error:', err);
     return NextResponse.json({ ready: false });
