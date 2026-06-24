@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import PurchaseFlag from "./PurchaseFlag";
 import PurchaseTracker from "./PurchaseTracker";
+import CourseAccessButton from "./CourseAccessButton";
 
 export const metadata: Metadata = {
   title: "You're In! - Mandala Masterclass",
@@ -38,6 +39,10 @@ export default function Success() {
           Your payment went through and you now have{" "}
           <strong className="text-cream">lifetime access</strong> to the course.
         </p>
+
+        <Suspense fallback={null}>
+          <CourseAccessButton />
+        </Suspense>
 
         <div className="rounded-xl p-6 sm:p-8 text-left space-y-4 shadow-sm" style={{ background: '#f8f6f3', border: '1px solid rgba(45,74,143,0.15)' }}>
           <h2 className="text-xl font-serif font-bold text-cream">
