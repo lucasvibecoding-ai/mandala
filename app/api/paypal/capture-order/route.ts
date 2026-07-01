@@ -96,11 +96,14 @@ export async function POST(request: Request) {
 
       try {
         const html = await render(OrderConfirmation({ customerEmail, setupUrl, loginUrl }));
+        const subject = setupUrl || loginUrl
+          ? 'Your Mandala Course is ready!'
+          : 'About your course purchase. Important update';
         const emailResult = await resend.emails.send({
           from: 'Aiko Mori <hello@mandalapractice.com>',
           to: customerEmail,
           replyTo: 'hello@mandalapractice.com',
-          subject: 'About your course purchase. Important update',
+          subject,
           html,
         });
         console.log(`Email sent successfully to ${customerEmail}:`, emailResult);
