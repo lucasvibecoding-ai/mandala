@@ -63,7 +63,9 @@ export default function PrivacyPage() {
           <h2 className="text-2xl font-serif mb-3 text-cream">5. Data Retention</h2>
           <p>
             We retain your personal information for as long as your account is active or as
-            needed to provide you with course access. If you request deletion of your data,
+            needed to provide you with course access. This website is owned and operated by
+            Sterling-Royce International Holdings, which acts as the data controller for the
+            information described in this policy. If you request deletion of your data,
             we will remove it within 30 days, except where we are legally required to retain
             it.
           </p>
