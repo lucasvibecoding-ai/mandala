@@ -44,6 +44,23 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
   const dateOfSupplyFrom = new Date().toISOString().slice(0, 10);
   const businessUnit = process.env.E_RACUNI_BUSINESS_UNIT;
   const documentLanguage = process.env.E_RACUNI_LANGUAGE ?? 'en';
+  const productCode = process.env.E_RACUNI_PRODUCT_CODE;
+
+  // When a product code (artikl SKU) is set, reference that defined product so the sale
+  // corresponds to it — e-računi supplies the price, unit, VAT rate and name from the artikl.
+  // The invoice then reflects the ARTIKL's price, NOT the amount we pass, so the e-računi artikl
+  // price must be kept in sync with what Stripe/PayPal actually charge. Without a product code
+  // we fall back to an ad-hoc line (description + the exact paid amount).
+  const item = productCode
+    ? { productCode, quantity: 1 }
+    : {
+        description: input.description,
+        quantity: 1,
+        unit: 'kom',
+        price: input.amount,
+        vatPercentage: 0,
+      };
+
   return {
     dateOfSupplyFrom,
     buyerName: input.buyerName || 'Kupac',
@@ -53,15 +70,7 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
     currency: input.currency,
     ...(documentLanguage ? { documentLanguage } : {}),
     ...(businessUnit ? { businessUnit } : {}),
-    Items: [
-      {
-        description: input.description,
-        quantity: 1,
-        unit: 'kom',
-        price: input.amount,
-        vatPercentage: 0,
-      },
-    ],
+    Items: [item],
   };
 }
 
