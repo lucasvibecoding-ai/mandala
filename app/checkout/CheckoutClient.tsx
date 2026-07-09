@@ -10,7 +10,7 @@ const stripePromise = loadStripe(
 );
 
 const BUMP_PRICE = 17;
-const BASE_PRICE = 1;
+const BASE_PRICE = 47;
 
 export default function CheckoutClient() {
   const [clientSecret, setClientSecret] = useState('');
@@ -526,7 +526,7 @@ export default function CheckoutClient() {
 
             <div className="product-title">Mandala Masterclass</div>
             <div className="product-price">
-              $1.00<span className="currency">USD</span>
+              $47.00<span className="currency">USD</span>
             </div>
             <div className="checkout-desktop-info" style={{ fontSize: 13, color: 'rgba(245,240,232,0.5)', lineHeight: 1.8, marginBottom: 32 }}>
               Lifetime Access &middot; One-Time Payment<br />90-Day Money-Back Guarantee
@@ -540,7 +540,7 @@ export default function CheckoutClient() {
 
             <div className="line-item">
               <span className="item-name">Mandala Masterclass (5 Modules)</span>
-              <span className="item-price">$1.00</span>
+              <span className="item-price">$47.00</span>
             </div>
             <div className="line-item">
               <span className="item-name">10 Printable Mandala Templates</span>
