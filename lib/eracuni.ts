@@ -130,7 +130,9 @@ async function callOnce(
   try {
     data = JSON.parse(raw);
   } catch {
-    throw new ERacuniError(`non-JSON response (${res.status}): ${raw.slice(0, 300)}`, res.status >= 500);
+    // 5xx (incl. a non-JSON proxy/gateway error page) = transient, retry within the deadline;
+    // 4xx / other = permanent (bad request / auth), no point retrying.
+    throw new ERacuniError(`non-JSON response (${res.status}): ${raw.slice(0, 300)}`, res.status < 500);
   }
 
   // Log the raw response so we can confirm the exact success shape / URL field name.
