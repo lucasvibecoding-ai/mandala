@@ -13,7 +13,7 @@ export const maxDuration = 60;
 // How long we keep retrying the e-računi invoice before sending the email without the
 // invoice link. Kept safely under maxDuration so there's room to actually send the email
 // and record the purchase before the function is killed at 60s.
-const INVOICE_DEADLINE_MS = 45000;
+const INVOICE_DEADLINE_MS = 30000;
 
 const sha256 = (value: string) =>
   createHash('sha256').update(value.trim().toLowerCase()).digest('hex');

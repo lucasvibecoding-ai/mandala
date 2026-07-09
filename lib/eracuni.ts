@@ -7,8 +7,7 @@
 //
 // The API is JSON-RPC style: POST { username, secretKey, token, method, parameters } to the
 // org-specific endpoint. `apiTransactionId` makes SalesInvoiceCreate idempotent, so retrying
-// with the same payment id NEVER creates a duplicate invoice — which is what makes the
-// retry-until-deadline below safe.
+// with the same payment id NEVER creates a duplicate invoice.
 
 export type FiscalInvoiceInput = {
   apiTransactionId: string; // Stripe PaymentIntent id or PayPal order id (idempotency key)
@@ -23,6 +22,17 @@ export type FiscalInvoiceInput = {
 
 export type FiscalInvoiceResult = { publicUrl: string; documentId?: string };
 
+// Error that records whether the failure is permanent (bad payload / validation -> retrying
+// won't help) or transient (network / 5xx -> worth retrying within the deadline).
+class ERacuniError extends Error {
+  readonly permanent: boolean;
+  constructor(message: string, permanent: boolean) {
+    super(message);
+    this.name = 'ERacuniError';
+    this.permanent = permanent;
+  }
+}
+
 function config() {
   const endpoint = process.env.E_RACUNI_ENDPOINT;
   const username = process.env.E_RACUNI_USERNAME;
@@ -34,26 +44,20 @@ function config() {
 
 function buildSalesInvoice(input: FiscalInvoiceInput) {
   // type "Retail" = consumer receipt (price is the final tax-inclusive amount). We are NOT in
-  // the VAT system, so vatPercentage is 0 and e-računi adds the small-taxpayer exemption note.
-  // dateOfSupplyFrom (YYYY-MM-DD) is required per the API reference; use today, since the
-  // invoice is issued at purchase time. businessUnit is the fiscalized poslovni prostor — set
-  // E_RACUNI_BUSINESS_UNIT when the API account's default BU isn't the fiscalized one.
-  // Currency: we send price + currency in the PAID currency (e.g. USD) and OMIT exchangeRate,
-  // so e-računi converts to EUR for fiscalization using the HNB middle rate (srednji tečaj) for
-  // the document date. Printout language via E_RACUNI_LANGUAGE (ISO code, default "en"; set it
-  // empty to fall back to the org default language).
+  // the VAT system, so e-računi adds the small-taxpayer exemption note. dateOfSupplyFrom
+  // (YYYY-MM-DD) is required. businessUnit = fiscalized poslovni prostor (optional env).
+  // documentLanguage is an enum with specific allowed values (NOT ISO "en") — only sent when
+  // E_RACUNI_LANGUAGE is set to a valid value; unset -> org default language.
   const dateOfSupplyFrom = new Date().toISOString().slice(0, 10);
   const businessUnit = process.env.E_RACUNI_BUSINESS_UNIT;
-  const documentLanguage = process.env.E_RACUNI_LANGUAGE ?? 'en';
+  const documentLanguage = process.env.E_RACUNI_LANGUAGE;
   const productCode = process.env.E_RACUNI_PRODUCT_CODE;
   const addonProductCode = process.env.E_RACUNI_ADDON_PRODUCT_CODE;
 
-  // When a product code (artikl SKU) is set, reference that defined product so the sale
-  // corresponds to it — e-računi supplies the price, unit, VAT rate and name from the artikl.
-  // The invoice then reflects the ARTIKL's price(s), NOT the amount we pass, so the e-računi
-  // artikl prices must be kept in sync with what Stripe/PayPal actually charge. If the buyer
-  // added the order bump, append the addon artikl as its own second line. Without a product code
-  // we fall back to a single ad-hoc line (description + the exact paid amount, bump included).
+  // With a product code set, reference the defined artikl so the sale corresponds to it —
+  // e-računi supplies its price, unit, VAT and name. If the buyer added the order bump, append
+  // the addon artikl as its own line. Without a product code we fall back to a single ad-hoc
+  // line (description + the exact paid amount, bump included).
   const items = productCode
     ? [
         { productCode, quantity: 1 },
@@ -88,55 +92,67 @@ async function callOnce(
   cfg: NonNullable<ReturnType<typeof config>>,
   input: FiscalInvoiceInput,
 ): Promise<FiscalInvoiceResult> {
-  const res = await fetch(cfg.endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username: cfg.username,
-      secretKey: cfg.secretKey,
-      token: cfg.token,
-      method: 'SalesInvoiceCreate',
-      parameters: {
-        apiTransactionId: input.apiTransactionId,
-        SalesInvoice: buildSalesInvoice(input),
-        generatePublicURL: true,
-        sendIssuedInvoiceByEmail: false,
-      },
-    }),
-    signal: AbortSignal.timeout(15000),
-  });
+  let res: Response;
+  try {
+    res = await fetch(cfg.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: cfg.username,
+        secretKey: cfg.secretKey,
+        token: cfg.token,
+        method: 'SalesInvoiceCreate',
+        parameters: {
+          apiTransactionId: input.apiTransactionId,
+          SalesInvoice: buildSalesInvoice(input),
+          generatePublicURL: true,
+          sendIssuedInvoiceByEmail: false,
+        },
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+  } catch (err) {
+    // Network error / timeout -> transient, worth retrying.
+    throw new ERacuniError(`request failed: ${err instanceof Error ? err.message : String(err)}`, false);
+  }
 
   const raw = await res.text();
-  let data: unknown;
+  let data: Record<string, any>;
   try {
     data = JSON.parse(raw);
   } catch {
-    throw new Error(`e-racuni: non-JSON response (${res.status}): ${raw.slice(0, 300)}`);
+    throw new ERacuniError(`non-JSON response (${res.status}): ${raw.slice(0, 300)}`, res.status >= 500);
   }
 
-  // Log the raw response so we can confirm the exact URL / id field names against the real
-  // payload on the first successful call, then tighten the parsing below if needed.
+  // Log the raw response so we can confirm the exact success shape / URL field name.
   console.log('[eracuni] SalesInvoiceCreate response:', JSON.stringify(data).slice(0, 1000));
 
-  const d = data as Record<string, any>;
-  if (d?.error || d?.errorMessage || d?.Error) {
-    throw new Error(`e-racuni error: ${JSON.stringify(d.error ?? d.errorMessage ?? d.Error)}`);
+  // e-računi wraps the payload in a "response" object carrying a status.
+  const r = (data.response ?? data) as Record<string, any>;
+
+  if (r?.status === 'error') {
+    // Validation / business error: our payload is wrong. Do NOT retry — it will never succeed.
+    throw new ERacuniError(`e-racuni error: ${r?.description ?? JSON.stringify(r)}`, true);
   }
 
-  const r = (d?.result ?? d) as Record<string, any>;
   const publicUrl: unknown =
     r?.publicURL ?? r?.publicUrl ?? r?.documentURL ?? r?.documentUrl ?? r?.url ?? r?.URL;
+  const documentId = r?.documentID ?? r?.documentId ?? r?.id ?? r?.number;
   if (!publicUrl || typeof publicUrl !== 'string') {
-    throw new Error(`e-racuni: no public URL in response: ${JSON.stringify(data).slice(0, 300)}`);
+    // The invoice may have been created (idempotent), but we can't find the URL field — don't
+    // retry. The logged response above shows the real shape so we can fix the field name.
+    throw new ERacuniError(
+      `no public URL in response (documentID=${documentId ?? '?'}): ${JSON.stringify(data).slice(0, 300)}`,
+      true,
+    );
   }
-  const documentId = r?.id ?? r?.documentId ?? r?.documentID;
   return { publicUrl, documentId: documentId != null ? String(documentId) : undefined };
 }
 
 /**
- * Create a fiscalized invoice and return its public URL, retrying until it succeeds
- * or `deadlineMs` elapses. Returns null if e-računi isn't configured (env vars missing)
- * or the deadline passes without success — the caller then sends the email without a link.
+ * Create a fiscalized invoice and return its public URL, retrying transient failures until
+ * success or `deadlineMs`. Returns null if e-računi isn't configured, a permanent (payload)
+ * error occurs, or the deadline passes — the caller then sends the email without a link.
  */
 export async function createFiscalInvoiceWithin(
   input: FiscalInvoiceInput,
@@ -154,9 +170,13 @@ export async function createFiscalInvoiceWithin(
     try {
       return await callOnce(cfg, input);
     } catch (err) {
-      const elapsed = Date.now() - start;
-      console.error(`[eracuni] attempt ${attempt} failed after ${elapsed}ms:`, err);
-      const remaining = deadlineMs - elapsed;
+      const permanent = err instanceof ERacuniError && err.permanent;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[eracuni] attempt ${attempt} failed (permanent=${permanent}): ${msg}`);
+      // Never retry a permanent payload/validation error — it wastes the whole deadline and
+      // can push the function past its timeout.
+      if (permanent) break;
+      const remaining = deadlineMs - (Date.now() - start);
       if (remaining <= 1000) break;
       await new Promise((resolve) => setTimeout(resolve, Math.min(3000, remaining)));
     }
