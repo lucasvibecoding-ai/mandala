@@ -80,11 +80,11 @@ export default function OrderConfirmation({
             Aiko Mori
           </Text>
 
-          <InvoiceLine url={invoiceUrl} />
-
           <Hr style={divider} />
 
           <SpamSection />
+
+          <InvoiceLine url={invoiceUrl} />
 
         </Container>
       </Body>
@@ -94,14 +94,19 @@ export default function OrderConfirmation({
 
 function InvoiceLine({ url }: { url?: string }) {
   if (!url) return null;
+  // Rendered at the very bottom of the email, below the deliverability section. Carries its own
+  // divider so the separator only appears when there is actually an invoice link to show.
   return (
-    <Text style={smallText}>
-      Your invoice:{' '}
-      <Link href={url} style={{ color: '#2d4a8f' }}>
-        view or download it here
-      </Link>
-      .
-    </Text>
+    <>
+      <Hr style={divider} />
+      <Text style={smallText}>
+        Your invoice:{' '}
+        <Link href={url} style={{ color: '#2d4a8f' }}>
+          view or download it here
+        </Link>
+        .
+      </Text>
+    </>
   );
 }
 

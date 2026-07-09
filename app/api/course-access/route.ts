@@ -74,6 +74,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ready: false });
     }
 
+    const signInUrl = `${process.env.COURSE_PLATFORM_URL}/sign-in`;
+
     const grantRes = await fetch(`${process.env.COURSE_PLATFORM_URL}/api/grant-access`, {
       method: 'POST',
       headers: {
@@ -82,12 +84,21 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({ email, courseSlug: 'mandala-masterclass' }),
     });
-    if (!grantRes.ok) return NextResponse.json({ ready: false });
 
-    const data = (await grantRes.json()) as { actionUrl?: string; isNewUser?: boolean };
-    if (!data.actionUrl) return NextResponse.json({ ready: false });
+    // The account may already exist because the Stripe webhook / PayPal capture granted access
+    // first — in that race grant-access returns no per-buyer link. Since the payment is verified
+    // and the course is live, still show the button, pointing at the generic sign-in page, so it
+    // never silently disappears on the buyer.
+    if (grantRes.ok) {
+      const data = (await grantRes.json()) as { actionUrl?: string; isNewUser?: boolean };
+      if (data.actionUrl) {
+        return NextResponse.json({ actionUrl: data.actionUrl, isNewUser: !!data.isNewUser, email });
+      }
+    } else {
+      console.error('grant-access failed:', grantRes.status, await grantRes.text());
+    }
 
-    return NextResponse.json({ actionUrl: data.actionUrl, isNewUser: !!data.isNewUser, email });
+    return NextResponse.json({ actionUrl: signInUrl, isNewUser: false, email });
   } catch (err) {
     console.error('course-access error:', err);
     return NextResponse.json({ ready: false });
