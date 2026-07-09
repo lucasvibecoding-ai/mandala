@@ -136,7 +136,8 @@ async function callOnce(
   // Log the raw response so we can confirm the exact success shape / URL field name.
   console.log('[eracuni] SalesInvoiceCreate response:', JSON.stringify(data).slice(0, 1000));
 
-  // e-računi wraps the payload in a "response" object carrying a status.
+  // e-računi wraps the payload in a "response" object carrying a status; the created document
+  // (documentID, number, documentURL) lives under response.result.
   const r = (data.response ?? data) as Record<string, any>;
 
   if (r?.status === 'error') {
@@ -144,9 +145,10 @@ async function callOnce(
     throw new ERacuniError(`e-racuni error: ${r?.description ?? JSON.stringify(r)}`, true);
   }
 
+  const result = (r?.result ?? r) as Record<string, any>;
   const publicUrl: unknown =
-    r?.publicURL ?? r?.publicUrl ?? r?.documentURL ?? r?.documentUrl ?? r?.url ?? r?.URL;
-  const documentId = r?.documentID ?? r?.documentId ?? r?.id ?? r?.number;
+    result?.documentURL ?? result?.publicURL ?? result?.publicUrl ?? result?.documentUrl ?? result?.url ?? result?.URL;
+  const documentId = result?.documentID ?? result?.documentId ?? result?.id;
   if (!publicUrl || typeof publicUrl !== 'string') {
     // The invoice may have been created (idempotent), but we can't find the URL field — don't
     // retry. The logged response above shows the real shape so we can fix the field name.
