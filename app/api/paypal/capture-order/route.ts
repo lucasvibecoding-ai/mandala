@@ -45,6 +45,11 @@ async function grantCourseAccess(
   if (!process.env.COURSE_PLATFORM_URL || !process.env.COURSE_PLATFORM_SECRET || !email) {
     return {};
   }
+  // The course platform is configured (live course), so the buyer always gets the "ready"
+  // email. If grant-access doesn't return a per-buyer link (e.g. the account already exists
+  // because the /success page granted it first), fall back to the generic sign-in page so we
+  // never send an "access pending" style email once a course is live.
+  const loginUrl = `${process.env.COURSE_PLATFORM_URL}/sign-in`;
   try {
     const grantRes = await fetch(`${process.env.COURSE_PLATFORM_URL}/api/grant-access`, {
       method: 'POST',
@@ -58,17 +63,18 @@ async function grantCourseAccess(
         ...(addonSlug ? { addonSlug } : {}),
       }),
     });
-    if (!grantRes.ok) {
+    if (grantRes.ok) {
+      const data = (await grantRes.json()) as { actionUrl?: string; isNewUser?: boolean };
+      if (data.actionUrl) {
+        return data.isNewUser ? { setupUrl: data.actionUrl } : { loginUrl: data.actionUrl };
+      }
+    } else {
       console.error('grant-access failed:', grantRes.status, await grantRes.text());
-      return {};
     }
-    const data = (await grantRes.json()) as { actionUrl?: string; isNewUser?: boolean };
-    if (!data.actionUrl) return {};
-    return data.isNewUser ? { setupUrl: data.actionUrl } : { loginUrl: data.actionUrl };
   } catch (err) {
     console.error('grant-access error:', err);
-    return {};
   }
+  return { loginUrl };
 }
 
 export async function POST(request: Request) {
@@ -150,10 +156,7 @@ export async function POST(request: Request) {
                 invoiceUrl: invoice?.publicUrl,
               }),
             );
-            const subject =
-              access.setupUrl || access.loginUrl
-                ? 'Your Mandala Course is ready!'
-                : 'About your course purchase. Important update';
+            const subject = 'Your Mandala Course is ready!';
             const emailResult = await resend.emails.send({
               from: 'Aiko Mori <hello@mandalapractice.com>',
               to: customerEmail,
