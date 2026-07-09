@@ -8,6 +8,7 @@ import {
   Hr,
   Preview,
   Button,
+  Link,
 } from '@react-email/components';
 
 interface OrderConfirmationProps {
@@ -18,12 +19,16 @@ interface OrderConfirmationProps {
   // Provided when the buyer already has an account on the course platform.
   // Sends them to /sign-in.
   loginUrl?: string;
+  // Public URL to the fiscalized e-računi invoice (view + download PDF).
+  // Omitted if the invoice was not ready within the send window.
+  invoiceUrl?: string;
 }
 
 export default function OrderConfirmation({
   customerEmail,
   setupUrl,
   loginUrl,
+  invoiceUrl,
 }: OrderConfirmationProps) {
   const accessUrl = setupUrl ?? loginUrl;
   const isNewUser = !!setupUrl;
@@ -67,6 +72,8 @@ export default function OrderConfirmation({
             <Text style={signature}>
               Aiko Mori
             </Text>
+
+            <InvoiceLine url={invoiceUrl} />
 
             <Hr style={divider} />
 
@@ -117,6 +124,8 @@ export default function OrderConfirmation({
             Aiko Mori
           </Text>
 
+          <InvoiceLine url={invoiceUrl} />
+
           <Hr style={divider} />
 
           <SpamSection />
@@ -124,6 +133,19 @@ export default function OrderConfirmation({
         </Container>
       </Body>
     </Html>
+  );
+}
+
+function InvoiceLine({ url }: { url?: string }) {
+  if (!url) return null;
+  return (
+    <Text style={smallText}>
+      Your invoice:{' '}
+      <Link href={url} style={{ color: '#2d4a8f' }}>
+        view or download it here
+      </Link>
+      .
+    </Text>
   );
 }
 
