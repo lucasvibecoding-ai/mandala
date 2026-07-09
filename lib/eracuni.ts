@@ -32,15 +32,21 @@ function config() {
 }
 
 function buildSalesInvoice(input: FiscalInvoiceInput) {
-  // type "Retail" = consumer receipt (price includes VAT). We are NOT in the VAT system,
-  // so vatPercentage is 0 and e-računi adds the small-taxpayer exemption note automatically.
-  // NOTE: confirm the exact field names against the org's live API console; adjust here only.
+  // type "Retail" = consumer receipt (price is the final tax-inclusive amount). We are NOT in
+  // the VAT system, so vatPercentage is 0 and e-računi adds the small-taxpayer exemption note.
+  // dateOfSupplyFrom (YYYY-MM-DD) is required per the API reference; use today, since the
+  // invoice is issued at purchase time. businessUnit is the fiscalized poslovni prostor — set
+  // E_RACUNI_BUSINESS_UNIT when the API account's default BU isn't the fiscalized one.
+  const dateOfSupplyFrom = new Date().toISOString().slice(0, 10);
+  const businessUnit = process.env.E_RACUNI_BUSINESS_UNIT;
   return {
+    dateOfSupplyFrom,
     buyerName: input.buyerName || 'Kupac',
     buyerEMail: input.buyerEmail,
     type: 'Retail',
     methodOfPayment: input.methodOfPayment,
     currency: input.currency,
+    ...(businessUnit ? { businessUnit } : {}),
     Items: [
       {
         description: input.description,
