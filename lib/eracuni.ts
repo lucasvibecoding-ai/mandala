@@ -43,7 +43,7 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
   // empty to fall back to the org default language).
   const dateOfSupplyFrom = new Date().toISOString().slice(0, 10);
   const businessUnit = process.env.E_RACUNI_BUSINESS_UNIT;
-  const language = process.env.E_RACUNI_LANGUAGE ?? 'en';
+  const documentLanguage = process.env.E_RACUNI_LANGUAGE ?? 'en';
   return {
     dateOfSupplyFrom,
     buyerName: input.buyerName || 'Kupac',
@@ -51,7 +51,7 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
     type: 'Retail',
     methodOfPayment: input.methodOfPayment,
     currency: input.currency,
-    ...(language ? { language } : {}),
+    ...(documentLanguage ? { documentLanguage } : {}),
     ...(businessUnit ? { businessUnit } : {}),
     Items: [
       {
