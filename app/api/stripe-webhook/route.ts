@@ -122,6 +122,7 @@ export async function POST(request: Request) {
               amount: paymentIntent.amount / 100,
               currency: (paymentIntent.currency || 'eur').toUpperCase(),
               methodOfPayment: 'Stripe',
+              includeAddon: !!addonSlug,
             },
             INVOICE_DEADLINE_MS,
           ).catch((err) => {

@@ -132,6 +132,7 @@ export async function POST(request: Request) {
                 amount,
                 currency,
                 methodOfPayment: 'PayPal',
+                includeAddon: !!addonSlug,
               },
               INVOICE_DEADLINE_MS,
             ).catch((err) => {

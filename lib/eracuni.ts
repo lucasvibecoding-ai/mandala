@@ -18,6 +18,7 @@ export type FiscalInvoiceInput = {
   amount: number; // total the buyer actually paid
   currency: string; // e.g. 'EUR'
   methodOfPayment: 'Stripe' | 'PayPal';
+  includeAddon?: boolean; // buyer added the order bump -> append the addon product line
 };
 
 export type FiscalInvoiceResult = { publicUrl: string; documentId?: string };
@@ -45,21 +46,30 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
   const businessUnit = process.env.E_RACUNI_BUSINESS_UNIT;
   const documentLanguage = process.env.E_RACUNI_LANGUAGE ?? 'en';
   const productCode = process.env.E_RACUNI_PRODUCT_CODE;
+  const addonProductCode = process.env.E_RACUNI_ADDON_PRODUCT_CODE;
 
   // When a product code (artikl SKU) is set, reference that defined product so the sale
   // corresponds to it — e-računi supplies the price, unit, VAT rate and name from the artikl.
-  // The invoice then reflects the ARTIKL's price, NOT the amount we pass, so the e-računi artikl
-  // price must be kept in sync with what Stripe/PayPal actually charge. Without a product code
-  // we fall back to an ad-hoc line (description + the exact paid amount).
-  const item = productCode
-    ? { productCode, quantity: 1 }
-    : {
-        description: input.description,
-        quantity: 1,
-        unit: 'kom',
-        price: input.amount,
-        vatPercentage: 0,
-      };
+  // The invoice then reflects the ARTIKL's price(s), NOT the amount we pass, so the e-računi
+  // artikl prices must be kept in sync with what Stripe/PayPal actually charge. If the buyer
+  // added the order bump, append the addon artikl as its own second line. Without a product code
+  // we fall back to a single ad-hoc line (description + the exact paid amount, bump included).
+  const items = productCode
+    ? [
+        { productCode, quantity: 1 },
+        ...(input.includeAddon && addonProductCode
+          ? [{ productCode: addonProductCode, quantity: 1 }]
+          : []),
+      ]
+    : [
+        {
+          description: input.description,
+          quantity: 1,
+          unit: 'kom',
+          price: input.amount,
+          vatPercentage: 0,
+        },
+      ];
 
   return {
     dateOfSupplyFrom,
@@ -70,7 +80,7 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
     currency: input.currency,
     ...(documentLanguage ? { documentLanguage } : {}),
     ...(businessUnit ? { businessUnit } : {}),
-    Items: [item],
+    Items: items,
   };
 }
 
