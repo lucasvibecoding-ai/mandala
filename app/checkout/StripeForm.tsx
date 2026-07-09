@@ -72,7 +72,12 @@ export default function StripeForm({ email, onEmailChange, paypalEmail, totalLab
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/success`,
-        receipt_email: email,
+        // Attach the buyer's email as billing details (NOT receipt_email) so the webhook /
+        // course-access can still resolve it from the charge, without triggering Stripe's
+        // automatic email receipt. receipt_email would override the dashboard toggle.
+        payment_method_data: {
+          billing_details: { email },
+        },
       },
     });
 
@@ -93,11 +98,13 @@ export default function StripeForm({ email, onEmailChange, paypalEmail, totalLab
 
     await ensurePIAmountSynced();
 
+    // For Apple/Google Pay the buyer's email comes from the wallet (requested via
+    // emailRequired in onExpressCheckoutClick) and lands in the charge's billing details,
+    // so we do NOT set receipt_email here — that would trigger Stripe's auto-receipt.
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/success`,
-        receipt_email: email,
       },
     });
 
@@ -118,7 +125,9 @@ export default function StripeForm({ email, onEmailChange, paypalEmail, totalLab
     // sheet opens. Sync the bump state to the PI before letting the sheet
     // render so the buyer sees and confirms the right total.
     await ensurePIAmountSynced();
-    event.resolve();
+    // Ask the wallet for the buyer's email so it lands in the charge's billing details
+    // (our backend reads it there) now that we no longer set receipt_email.
+    event.resolve({ emailRequired: true });
   };
 
   return (
@@ -153,6 +162,15 @@ export default function StripeForm({ email, onEmailChange, paypalEmail, totalLab
       <form onSubmit={handleSubmit}>
         <PaymentElement
           options={{
+            // The email is collected by our own field above and passed as billing details
+            // on confirm, so don't render the Payment Element's own email field. This lets
+            // us set billing_details.email without setting receipt_email (which is what was
+            // forcing Stripe's automatic receipt).
+            fields: {
+              billingDetails: {
+                email: 'never',
+              },
+            },
             wallets: {
               applePay: 'never',
               googlePay: 'never',
