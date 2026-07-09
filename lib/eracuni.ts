@@ -37,8 +37,13 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
   // dateOfSupplyFrom (YYYY-MM-DD) is required per the API reference; use today, since the
   // invoice is issued at purchase time. businessUnit is the fiscalized poslovni prostor — set
   // E_RACUNI_BUSINESS_UNIT when the API account's default BU isn't the fiscalized one.
+  // Currency: we send price + currency in the PAID currency (e.g. USD) and OMIT exchangeRate,
+  // so e-računi converts to EUR for fiscalization using the HNB middle rate (srednji tečaj) for
+  // the document date. Printout language via E_RACUNI_LANGUAGE (ISO code, default "en"; set it
+  // empty to fall back to the org default language).
   const dateOfSupplyFrom = new Date().toISOString().slice(0, 10);
   const businessUnit = process.env.E_RACUNI_BUSINESS_UNIT;
+  const language = process.env.E_RACUNI_LANGUAGE ?? 'en';
   return {
     dateOfSupplyFrom,
     buyerName: input.buyerName || 'Kupac',
@@ -46,6 +51,7 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
     type: 'Retail',
     methodOfPayment: input.methodOfPayment,
     currency: input.currency,
+    ...(language ? { language } : {}),
     ...(businessUnit ? { businessUnit } : {}),
     Items: [
       {
