@@ -46,11 +46,20 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
   // type "Retail" = consumer receipt (price is the final tax-inclusive amount). We are NOT in
   // the VAT system, so e-računi adds the small-taxpayer exemption note. dateOfSupplyFrom
   // (YYYY-MM-DD) is required. businessUnit = fiscalized poslovni prostor (optional env).
-  // documentLanguage is an enum with specific allowed values (NOT ISO "en") — only sent when
-  // E_RACUNI_LANGUAGE is set to a valid value; unset -> org default language.
+  // documentLanguage must be a full language NAME: Slovene, English, German or Croatian (NOT an
+  // ISO code like "en"). Map common ISO codes so E_RACUNI_LANGUAGE=en still works; default to
+  // English; empty string -> omit (use the org default language).
   const dateOfSupplyFrom = new Date().toISOString().slice(0, 10);
   const businessUnit = process.env.E_RACUNI_BUSINESS_UNIT;
-  const documentLanguage = process.env.E_RACUNI_LANGUAGE;
+  const LANGUAGE_NAMES: Record<string, string> = {
+    en: 'English',
+    hr: 'Croatian',
+    de: 'German',
+    sl: 'Slovene',
+    si: 'Slovene',
+  };
+  const rawLanguage = process.env.E_RACUNI_LANGUAGE ?? 'English';
+  const documentLanguage = LANGUAGE_NAMES[rawLanguage.toLowerCase()] ?? rawLanguage;
   const productCode = process.env.E_RACUNI_PRODUCT_CODE;
   const addonProductCode = process.env.E_RACUNI_ADDON_PRODUCT_CODE;
 
