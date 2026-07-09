@@ -9,7 +9,7 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
 
-const BUMP_PRICE = 19.99;
+const BUMP_PRICE = 17;
 const BASE_PRICE = 47;
 
 export default function CheckoutClient() {
@@ -564,7 +564,7 @@ export default function CheckoutClient() {
                 <span className="item-name">
                   Mandala Pack (150 printable mandalas)
                 </span>
-                <span className="item-price">$19.99</span>
+                <span className="item-price">$17.00</span>
               </div>
             )}
 
@@ -600,7 +600,7 @@ export default function CheckoutClient() {
                   className="bump-image"
                 />
                 <div className="bump-headline">
-                  <span className="bump-yes">YES!</span> Add the Mandala Pack — 150 printable mandalas — for just $19.99
+                  <span className="bump-yes">YES!</span> Add the Mandala Pack — 150 printable mandalas — for just $17
                 </div>
                 <div className="bump-sub">
                   A one-time upgrade. Lifetime access to 150 ready-to-color mandala designs alongside your masterclass.

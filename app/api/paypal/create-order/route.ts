@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const description = includeBump
       ? `${baseDescription} + Mandala Pack`
       : baseDescription;
-    const value = includeBump ? '66.99' : '47.00';
+    const value = includeBump ? '64.00' : '47.00';
 
     const accessToken = await getAccessToken();
 

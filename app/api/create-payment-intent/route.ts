@@ -6,7 +6,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 // Cents to add to the base price when the buyer accepts the order bump.
-const BUMP_AMOUNT_CENTS = 1999;
+const BUMP_AMOUNT_CENTS = 1700;
 
 export async function POST(request: Request) {
   try {
