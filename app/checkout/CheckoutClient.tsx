@@ -627,7 +627,7 @@ export default function CheckoutClient() {
                       },
                     }}
                   >
-                    <StripeForm email={email} onEmailChange={setEmail} paypalEmail={email} totalLabel={totalFormatted} includeBump={bumpSelected} paymentIntentId={paymentIntentId} />
+                    <StripeForm email={email} onEmailChange={setEmail} totalLabel={totalFormatted} includeBump={bumpSelected} paymentIntentId={paymentIntentId} />
                   </Elements>
                 )}
               </div>

@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       currency: price.currency,
       automatic_payment_methods: {
         enabled: true,
-        allow_redirects: 'never',
+        allow_redirects: 'always',
       },
       metadata,
     });
