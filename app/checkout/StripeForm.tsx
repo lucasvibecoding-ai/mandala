@@ -141,27 +141,30 @@ export default function StripeForm({ email, onEmailChange, totalLabel, includeBu
         onConfirm={onExpressCheckoutConfirm}
         onClick={onExpressCheckoutClick}
         options={{
-          // PayPal is offered inside the Payment Element below (a redirect method
-          // processed by Stripe), so keep it out of the express row to avoid duplicates.
-          paymentMethods: {
-            paypal: 'never',
+          // PayPal shows as its own gold express button (click-to-pay), styled to match the
+          // old checkout. Apple/Google Pay keep their existing buttons.
+          buttonTheme: {
+            paypal: 'gold',
           },
           buttonType: {
             applePay: 'buy',
             googlePay: 'buy',
+            paypal: 'pay',
           },
         }}
       />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
         <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
-        <span style={{ fontSize: 13, color: '#9a9689', whiteSpace: 'nowrap' }}>Or pay with card or PayPal</span>
+        <span style={{ fontSize: 13, color: '#9a9689', whiteSpace: 'nowrap' }}>Or pay with card</span>
         <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
       </div>
 
       <form onSubmit={handleSubmit}>
         <PaymentElement
           options={{
+            // Card only in this element; PayPal is the gold express button above.
+            paymentMethodOrder: ['card'],
             // The email is collected by our own field above and passed as billing details
             // on confirm, so don't render the Payment Element's own email field. This lets
             // us set billing_details.email without setting receipt_email (which is what was
