@@ -93,6 +93,7 @@ interface RecordPurchaseInput {
   provider: 'Stripe' | 'PayPal';
   email: string;
   firstName?: string;
+  includeAddon?: boolean;
 }
 
 export async function recordPurchase(input: RecordPurchaseInput): Promise<void> {
@@ -110,20 +111,38 @@ export async function recordPurchase(input: RecordPurchaseInput): Promise<void> 
 
     const customerId = await upsertCustomer(config, input.email, input.firstName);
 
-    await airtableFetch(config, 'Purchases', {
-      method: 'POST',
-      body: JSON.stringify({
-        fields: {
-          'Transaction ID': input.transactionId,
-          Date: input.date.toISOString(),
-          Amount: input.amount,
-          Status: 'Paid',
-          'Payment Provider': input.provider,
-          Project: [config.projectId],
-          Customer: [customerId],
-        },
-      }),
-    });
+    const fields: Record<string, unknown> = {
+      'Transaction ID': input.transactionId,
+      Date: input.date.toISOString(),
+      Amount: input.amount,
+      Status: 'Paid',
+      'Payment Provider': input.provider,
+      Project: [config.projectId],
+      Customer: [customerId],
+    };
+    // Only sites that sell an add-on pass includeAddon. The shared base's "Includes Pack"
+    // checkbox may not exist yet, so if Airtable rejects it as unknown, record the purchase
+    // without it rather than lose the whole row.
+    if (input.includeAddon !== undefined) {
+      fields['Includes Pack'] = !!input.includeAddon;
+    }
+    try {
+      await airtableFetch(config, 'Purchases', {
+        method: 'POST',
+        body: JSON.stringify({ fields }),
+      });
+    } catch (err) {
+      if ('Includes Pack' in fields && /UNKNOWN_FIELD_NAME|Includes Pack/i.test(String(err))) {
+        delete fields['Includes Pack'];
+        await airtableFetch(config, 'Purchases', {
+          method: 'POST',
+          body: JSON.stringify({ fields }),
+        });
+        console.warn('Airtable: "Includes Pack" field missing — recorded purchase without it');
+      } else {
+        throw err;
+      }
+    }
 
     console.log(`Airtable: recorded purchase ${input.transactionId} for ${input.email}`);
   } catch (err) {

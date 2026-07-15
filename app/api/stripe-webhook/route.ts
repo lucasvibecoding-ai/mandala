@@ -167,6 +167,7 @@ export async function POST(request: Request) {
             provider: 'Stripe',
             email: customerEmail,
             firstName,
+            includeAddon: !!addonSlug,
           });
         }
 
