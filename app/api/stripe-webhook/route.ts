@@ -65,6 +65,31 @@ async function grantCourseAccess(
   return { loginUrl };
 }
 
+// Report the sale to the VAT counter. Fully isolated: no-ops unless VAT_COUNTER_URL and
+// VAT_COUNTER_SECRET are set, times out fast, and never throws — so it can never affect the
+// payment, email, course access, fiscal invoice, or Airtable record.
+async function postVatSale(payload: Record<string, unknown>): Promise<void> {
+  const url = process.env.VAT_COUNTER_URL;
+  const secret = process.env.VAT_COUNTER_SECRET;
+  if (!url || !secret) return;
+  try {
+    const res = await fetch(`${url}/api/ingest`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) {
+      console.error('vat-counter ingest failed:', res.status, await res.text().catch(() => ''));
+    }
+  } catch (err) {
+    console.error('vat-counter ingest error:', err);
+  }
+}
+
 export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get('stripe-signature');
@@ -99,11 +124,17 @@ export async function POST(request: Request) {
       try {
         let customerEmail = paymentIntent.receipt_email;
         let customerName: string | null = null;
+        let cardCountry: string | null = null;
+        let billingCountry: string | null = null;
+        let postalCode: string | null = null;
 
         if (paymentIntent.latest_charge) {
           const charge = await stripe.charges.retrieve(paymentIntent.latest_charge as string);
           customerEmail = customerEmail || charge.billing_details?.email || null;
           customerName = charge.billing_details?.name || null;
+          cardCountry = charge.payment_method_details?.card?.country ?? null;
+          billingCountry = charge.billing_details?.address?.country ?? null;
+          postalCode = charge.billing_details?.address?.postal_code ?? null;
         }
 
         const toEmail = customerEmail || 'hello@mandalapractice.com';
@@ -203,6 +234,27 @@ export async function POST(request: Request) {
             },
           ).catch((err) => console.error('CAPI Purchase error:', err));
         }
+
+        // Report the sale to the VAT counter. Runs last and is fully isolated, so it can
+        // never delay or affect anything above.
+        await postVatSale({
+          source: 'mandala',
+          transactionId: paymentIntent.id,
+          amountCents: paymentIntent.amount,
+          currency: paymentIntent.currency,
+          ipCountry:
+            typeof paymentIntent.metadata?.ip_country === 'string'
+              ? paymentIntent.metadata.ip_country
+              : undefined,
+          ipRegion:
+            typeof paymentIntent.metadata?.ip_region === 'string'
+              ? paymentIntent.metadata.ip_region
+              : undefined,
+          stripeCountry: billingCountry ?? undefined,
+          cardCountry: cardCountry ?? undefined,
+          postalCode: postalCode ?? undefined,
+          createdAt: new Date(paymentIntent.created * 1000).toISOString(),
+        });
       } catch (err) {
         console.error('Fulfillment error:', err);
       }

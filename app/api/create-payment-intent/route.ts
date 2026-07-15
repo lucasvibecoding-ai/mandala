@@ -31,6 +31,12 @@ export async function POST(request: Request) {
     if (includeBump) {
       metadata.includes_addon = 'mandala-pack';
     }
+    // Buyer location for the VAT counter. Additive metadata only; absent in local dev.
+    // update-payment-intent spreads existing metadata, so these survive an order-bump toggle.
+    const ipCountry = request.headers.get('x-vercel-ip-country');
+    const ipRegion = request.headers.get('x-vercel-ip-country-region');
+    if (ipCountry) metadata.ip_country = ipCountry;
+    if (ipRegion) metadata.ip_region = ipRegion;
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
