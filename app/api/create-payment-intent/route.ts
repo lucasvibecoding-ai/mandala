@@ -35,8 +35,15 @@ export async function POST(request: Request) {
     // update-payment-intent spreads existing metadata, so these survive an order-bump toggle.
     const ipCountry = request.headers.get('x-vercel-ip-country');
     const ipRegion = request.headers.get('x-vercel-ip-country-region');
+    const ipCityRaw = request.headers.get('x-vercel-ip-city');
+    const ipAddress =
+      request.headers.get('x-real-ip') ||
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      '';
     if (ipCountry) metadata.ip_country = ipCountry;
     if (ipRegion) metadata.ip_region = ipRegion;
+    if (ipCityRaw) metadata.ip_city = decodeURIComponent(ipCityRaw);
+    if (ipAddress) metadata.ip_address = ipAddress;
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount,

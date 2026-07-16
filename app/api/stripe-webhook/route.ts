@@ -250,6 +250,14 @@ export async function POST(request: Request) {
             typeof paymentIntent.metadata?.ip_region === 'string'
               ? paymentIntent.metadata.ip_region
               : undefined,
+          ipCity:
+            typeof paymentIntent.metadata?.ip_city === 'string'
+              ? paymentIntent.metadata.ip_city
+              : undefined,
+          ipAddress:
+            typeof paymentIntent.metadata?.ip_address === 'string'
+              ? paymentIntent.metadata.ip_address
+              : undefined,
           stripeCountry: billingCountry ?? undefined,
           cardCountry: cardCountry ?? undefined,
           postalCode: postalCode ?? undefined,
