@@ -127,6 +127,7 @@ export async function POST(request: Request) {
         let cardCountry: string | null = null;
         let billingCountry: string | null = null;
         let postalCode: string | null = null;
+        let stripeProof: Record<string, unknown> | null = null;
 
         if (paymentIntent.latest_charge) {
           const charge = await stripe.charges.retrieve(paymentIntent.latest_charge as string);
@@ -135,6 +136,15 @@ export async function POST(request: Request) {
           cardCountry = charge.payment_method_details?.card?.country ?? null;
           billingCountry = charge.billing_details?.address?.country ?? null;
           postalCode = charge.billing_details?.address?.postal_code ?? null;
+          // Full raw Stripe payment evidence for the VAT counter's transaction proof.
+          stripeProof = {
+            chargeId: charge.id,
+            paymentType: charge.payment_method_details?.type ?? null,
+            receiptUrl: charge.receipt_url ?? null,
+            paymentMethod: charge.payment_method_details ?? null,
+            billing: charge.billing_details ?? null,
+            outcome: charge.outcome ?? null,
+          };
         }
 
         const toEmail = customerEmail || 'hello@mandalapractice.com';
@@ -261,6 +271,7 @@ export async function POST(request: Request) {
           stripeCountry: billingCountry ?? undefined,
           cardCountry: cardCountry ?? undefined,
           postalCode: postalCode ?? undefined,
+          stripeProof: stripeProof ?? undefined,
           createdAt: new Date(paymentIntent.created * 1000).toISOString(),
         });
       } catch (err) {
