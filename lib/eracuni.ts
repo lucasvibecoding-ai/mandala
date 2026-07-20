@@ -91,6 +91,7 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
     type: 'Retail',
     methodOfPayment: input.methodOfPayment,
     currency: input.currency,
+    totalCurrency: input.currency,
     ...(documentLanguage ? { documentLanguage } : {}),
     ...(businessUnit ? { businessUnit } : {}),
     Items: items,
