@@ -2,8 +2,9 @@
 // page (display) and create-payment-intent (the actual charge) so they can never drift.
 //
 // €47 and $47 are both amount 4700, so only the currency/symbol flips; the amount is unchanged.
-// USD for the Americas + Australia + New Zealand + the dollar countries; EUR for everyone else
-// (all of Europe, Africa, the Middle East, Asia) and for unknown location.
+// USD for the Americas + Australia + New Zealand + the dollar countries, and when the buyer's
+// location is unknown (IP lookup failed); EUR for everyone else (all of Europe, Africa, the
+// Middle East, Asia).
 export const USD_COUNTRIES = new Set([
   // North America + US territories
   'US', 'CA', 'MX', 'PR', 'VI', 'GU', 'AS', 'MP',
@@ -20,7 +21,9 @@ export const USD_COUNTRIES = new Set([
 ]);
 
 export function currencyForCountry(country: string | null | undefined): 'usd' | 'eur' {
-  return country && USD_COUNTRIES.has(country.toUpperCase()) ? 'usd' : 'eur';
+  // No country resolved (IP lookup failed) defaults to USD.
+  if (!country) return 'usd';
+  return USD_COUNTRIES.has(country.toUpperCase()) ? 'usd' : 'eur';
 }
 
 export function currencySymbol(currency: string): string {
