@@ -42,7 +42,7 @@ export default function TermsPage() {
           <h2 className="text-2xl font-serif mb-3 text-cream">3. Payment &amp; Pricing</h2>
           <p>
             The Course is available for a one time payment as listed on the checkout page.
-            All prices are in USD. Payment is processed securely through Stripe or PayPal.
+            Prices are shown in EUR or USD depending on your location. Payment is processed securely through Stripe or PayPal.
             You will receive immediate access to the Course upon successful payment.
           </p>
         </section>
