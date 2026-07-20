@@ -18,11 +18,15 @@ export default function CheckoutClient() {
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [bumpSelected, setBumpSelected] = useState(false);
+  const [currency, setCurrency] = useState('usd');
   const fetched = useRef(false);
   const firstUpdate = useRef(true);
 
   const total = BASE_PRICE + (bumpSelected ? BUMP_PRICE : 0);
-  const totalFormatted = `$${total.toFixed(2)}`;
+  const symbol = currency === 'eur' ? '€' : '$';
+  const code = currency === 'eur' ? 'EUR' : 'USD';
+  const fmt = (n: number) => `${symbol}${n.toFixed(2)}`;
+  const totalFormatted = fmt(total);
 
   useEffect(() => {
     if (fetched.current) return;
@@ -39,6 +43,7 @@ export default function CheckoutClient() {
       .then((data) => {
         setClientSecret(data.clientSecret);
         setPaymentIntentId(data.paymentIntentId ?? '');
+        setCurrency(data.currency ?? 'usd');
         const elapsed = Date.now() - mountTime;
         const remaining = Math.max(2000 - elapsed, 0);
         setTimeout(() => setVisible(true), remaining);
@@ -526,7 +531,7 @@ export default function CheckoutClient() {
 
             <div className="product-title">Mandala Masterclass</div>
             <div className="product-price">
-              $47.00<span className="currency">USD</span>
+              {fmt(BASE_PRICE)}<span className="currency">{code}</span>
             </div>
             <div className="checkout-desktop-info" style={{ fontSize: 13, color: 'rgba(245,240,232,0.5)', lineHeight: 1.8, marginBottom: 32 }}>
               Lifetime Access &middot; One-Time Payment<br />90-Day Money-Back Guarantee
@@ -540,7 +545,7 @@ export default function CheckoutClient() {
 
             <div className="line-item">
               <span className="item-name">Mandala Masterclass (5 Modules)</span>
-              <span className="item-price">$47.00</span>
+              <span className="item-price">{fmt(BASE_PRICE)}</span>
             </div>
             <div className="line-item">
               <span className="item-name">10 Printable Mandala Templates</span>
@@ -564,7 +569,7 @@ export default function CheckoutClient() {
                 <span className="item-name">
                   Mandala Pack (150 printable mandalas)
                 </span>
-                <span className="item-price">$17.00</span>
+                <span className="item-price">{fmt(BUMP_PRICE)}</span>
               </div>
             )}
 
@@ -600,7 +605,7 @@ export default function CheckoutClient() {
                   className="bump-image"
                 />
                 <div className="bump-headline">
-                  <span className="bump-yes">YES!</span> Add the Mandala Pack — 150 printable mandalas — for just $17
+                  <span className="bump-yes">YES!</span> Add the Mandala Pack — 150 printable mandalas — for just {symbol}17
                 </div>
                 <div className="bump-sub">
                   A one-time upgrade. Lifetime access to 150 ready-to-color mandala designs alongside your masterclass.
