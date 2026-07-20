@@ -94,6 +94,7 @@ interface RecordPurchaseInput {
   email: string;
   firstName?: string;
   includeAddon?: boolean;
+  currency?: string;
 }
 
 export async function recordPurchase(input: RecordPurchaseInput): Promise<void> {
@@ -119,6 +120,7 @@ export async function recordPurchase(input: RecordPurchaseInput): Promise<void> 
       'Payment Provider': input.provider,
       Project: [config.projectId],
       Customer: [customerId],
+      Currency: (input.currency || 'usd').toLowerCase(),
     };
     // Only sites that sell an add-on pass includeAddon. The shared base's "Includes Pack"
     // checkbox may not exist yet, so if Airtable rejects it as unknown, record the purchase

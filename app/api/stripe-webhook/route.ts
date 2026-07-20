@@ -205,6 +205,7 @@ export async function POST(request: Request) {
             transactionId: paymentIntent.id,
             date: new Date(paymentIntent.created * 1000),
             amount: paymentIntent.amount / 100,
+            currency: paymentIntent.currency,
             provider: 'Stripe',
             email: customerEmail,
             firstName,
