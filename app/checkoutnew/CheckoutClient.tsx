@@ -665,27 +665,27 @@ export default function CheckoutClient() {
                       />
                     </Elements>
 
-                    {/* Row 2: PayPal only, full width, in a SECOND Elements instance so its
-                        one-column layout does not affect the wallets above. */}
-                    <div style={{ marginTop: 12 }}>
-                      <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+                    {/* Row 2 (full-width PayPal) + the card share ONE Elements instance so the
+                        Payment Element hides PayPal (Stripe de-dupes methods already shown by a
+                        same-group Express Checkout Element), leaving the card section card-only.
+                        Only the wallets above are in a separate instance, so PayPal's one-column
+                        layout doesn't force them full-width. */}
+                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+                      <div style={{ marginTop: 12 }}>
                         <PayPalExpress
                           emailValid={emailValid}
                           onEmailError={showExpressEmailError}
                           ensurePIAmountSynced={ensurePIAmountSynced}
                           onError={setExpressError}
                         />
-                      </Elements>
-                    </div>
+                      </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
-                      <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
-                      <span style={{ fontSize: 13, color: '#9a9689', whiteSpace: 'nowrap' }}>Or pay with card</span>
-                      <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
-                    </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
+                        <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+                        <span style={{ fontSize: 13, color: '#9a9689', whiteSpace: 'nowrap' }}>Or pay with card</span>
+                        <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+                      </div>
 
-                    {/* Card, in a THIRD Elements instance. */}
-                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
                       <CardForm
                         email={email}
                         emailValid={emailValid}
