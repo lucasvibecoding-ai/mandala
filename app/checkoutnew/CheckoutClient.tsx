@@ -689,6 +689,7 @@ export default function CheckoutClient() {
                       <CardForm
                         email={email}
                         emailValid={emailValid}
+                        clientSecret={clientSecret}
                         ensurePIAmountSynced={ensurePIAmountSynced}
                         totalLabel={totalFormatted}
                       />
