@@ -48,6 +48,7 @@ export default function WalletExpress({
       onClick={onClick}
       options={{
         paymentMethods: {
+          link: 'always',
           paypal: 'never',
           amazonPay: 'never',
         },
