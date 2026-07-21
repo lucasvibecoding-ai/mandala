@@ -48,6 +48,9 @@ export default function WalletExpress({
       onClick={onClick}
       options={{
         paymentMethods: {
+          applePay: 'auto',
+          googlePay: 'auto',
+          link: 'auto',
           paypal: 'never',
           amazonPay: 'never',
         },
