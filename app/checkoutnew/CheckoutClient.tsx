@@ -7,6 +7,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import WalletExpress from './WalletExpress';
 import PayPalExpress from './PayPalExpress';
 import CardForm from './CardForm';
+import MobileForm from './MobileForm';
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
@@ -22,6 +23,7 @@ export default function CheckoutClient() {
   const [bumpSelected, setBumpSelected] = useState(false);
   const [currency, setCurrency] = useState('usd');
   const [expressError, setExpressError] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
   const fetched = useRef(false);
   const firstUpdate = useRef(true);
 
@@ -70,6 +72,13 @@ export default function CheckoutClient() {
       console.error('Failed to update PaymentIntent for bump toggle:', err)
     );
   }, [paymentIntentId, bumpSelected]);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const showExpressEmailError = () =>
@@ -647,7 +656,20 @@ export default function CheckoutClient() {
               <div className="section-title">Express checkout</div>
 
               <div className="payment-form-area">
-                {clientSecret && (
+                {clientSecret && (isMobile ? (
+                  /* MOBILE: one Express Checkout Element (all methods stacked full-width). The
+                     separate PayPal-only element does not render on mobile, so on small screens
+                     we use a single element that reliably shows PayPal. */
+                  <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+                    <MobileForm
+                      email={email}
+                      onEmailChange={setEmail}
+                      totalLabel={totalFormatted}
+                      includeBump={bumpSelected}
+                      paymentIntentId={paymentIntentId}
+                    />
+                  </Elements>
+                ) : (
                   <>
                     {expressError && (
                       <p style={{ color: '#df1b41', fontSize: '14px', marginBottom: '12px' }}>
@@ -694,7 +716,7 @@ export default function CheckoutClient() {
                       />
                     </Elements>
                   </>
-                )}
+                ))}
               </div>
 
               <div className="footer-row">
