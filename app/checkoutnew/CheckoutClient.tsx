@@ -4,9 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import WalletExpress from './WalletExpress';
-import PayPalExpress from './PayPalExpress';
-import CardForm from './CardForm';
+import StripeForm from './StripeForm';
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
@@ -21,7 +19,6 @@ export default function CheckoutClient() {
   const [email, setEmail] = useState('');
   const [bumpSelected, setBumpSelected] = useState(false);
   const [currency, setCurrency] = useState('usd');
-  const [expressError, setExpressError] = useState('');
   const fetched = useRef(false);
   const firstUpdate = useRef(true);
 
@@ -70,33 +67,6 @@ export default function CheckoutClient() {
       console.error('Failed to update PaymentIntent for bump toggle:', err)
     );
   }, [paymentIntentId, bumpSelected]);
-
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const showExpressEmailError = () =>
-    setExpressError('Please enter a valid email address above to continue.');
-
-  // Force the PaymentIntent amount/metadata to match the bump state right before any confirm.
-  const ensurePIAmountSynced = async () => {
-    if (!paymentIntentId) return;
-    try {
-      await fetch('/api/update-payment-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentIntentId, includeBump: bumpSelected }),
-      });
-    } catch (err) {
-      console.error('ensurePIAmountSynced failed:', err);
-    }
-  };
-
-  const appearance = {
-    theme: 'stripe' as const,
-    variables: {
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-      colorPrimary: '#635BFF',
-      borderRadius: '6px',
-    },
-  };
 
   return (
     <>
@@ -648,53 +618,22 @@ export default function CheckoutClient() {
 
               <div className="payment-form-area">
                 {clientSecret && (
-                  <>
-                    {expressError && (
-                      <p style={{ color: '#df1b41', fontSize: '14px', marginBottom: '12px' }}>
-                        {expressError}
-                      </p>
-                    )}
-
-                    {/* Row 1: Apple/Google Pay + Link, in their own Elements instance. */}
-                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-                      <WalletExpress
-                        emailValid={emailValid}
-                        onEmailError={showExpressEmailError}
-                        ensurePIAmountSynced={ensurePIAmountSynced}
-                        onError={setExpressError}
-                      />
-                    </Elements>
-
-                    {/* Row 2 (full-width PayPal) + the card share ONE Elements instance so the
-                        Payment Element hides PayPal (Stripe de-dupes methods already shown by a
-                        same-group Express Checkout Element), leaving the card section card-only.
-                        Only the wallets above are in a separate instance, so PayPal's one-column
-                        layout doesn't force them full-width. */}
-                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-                      <div style={{ marginTop: 12 }}>
-                        <PayPalExpress
-                          emailValid={emailValid}
-                          onEmailError={showExpressEmailError}
-                          ensurePIAmountSynced={ensurePIAmountSynced}
-                          onError={setExpressError}
-                        />
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
-                        <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
-                        <span style={{ fontSize: 13, color: '#9a9689', whiteSpace: 'nowrap' }}>Or pay with card</span>
-                        <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
-                      </div>
-
-                      <CardForm
-                        email={email}
-                        emailValid={emailValid}
-                        clientSecret={clientSecret}
-                        ensurePIAmountSynced={ensurePIAmountSynced}
-                        totalLabel={totalFormatted}
-                      />
-                    </Elements>
-                  </>
+                  <Elements
+                    stripe={stripePromise}
+                    options={{
+                      clientSecret,
+                      appearance: {
+                        theme: 'stripe',
+                        variables: {
+                          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                          colorPrimary: '#635BFF',
+                          borderRadius: '6px',
+                        },
+                      },
+                    }}
+                  >
+                    <StripeForm email={email} onEmailChange={setEmail} totalLabel={totalFormatted} includeBump={bumpSelected} paymentIntentId={paymentIntentId} />
+                  </Elements>
                 )}
               </div>
 
