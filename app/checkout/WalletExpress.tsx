@@ -7,9 +7,9 @@ import {
 } from '@stripe/react-stripe-js';
 import type { StripeExpressCheckoutElementClickEvent } from '@stripe/stripe-js';
 
-// Row 2: PayPal ONLY, full width (maxColumns 1) in its own Elements instance, so its single
-// column layout does not force the Apple/Google Pay + Link buttons full-width too.
-export default function PayPalExpress({
+// Row 1: Apple/Google Pay + Link. PayPal is deliberately excluded here and rendered as its
+// own full-width element (PayPalExpress) so the wallets stay 2-up and PayPal gets its own row.
+export default function WalletExpress({
   emailValid,
   onEmailError,
   ensurePIAmountSynced,
@@ -17,7 +17,7 @@ export default function PayPalExpress({
 }: {
   emailValid: boolean;
   onEmailError: () => void;
-  ensurePIAmountSynced: () => Promise<void>;
+  ensurePIAmountSynced?: () => Promise<void>;
   onError: (msg: string) => void;
 }) {
   const stripe = useStripe();
@@ -25,7 +25,7 @@ export default function PayPalExpress({
 
   const onConfirm = async () => {
     if (!stripe || !elements) return;
-    await ensurePIAmountSynced();
+    await ensurePIAmountSynced?.();
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: `${window.location.origin}/success` },
@@ -38,7 +38,7 @@ export default function PayPalExpress({
       onEmailError();
       return;
     }
-    await ensurePIAmountSynced();
+    await ensurePIAmountSynced?.();
     event.resolve({ emailRequired: true });
   };
 
@@ -48,20 +48,12 @@ export default function PayPalExpress({
       onClick={onClick}
       options={{
         paymentMethods: {
-          applePay: 'never',
-          googlePay: 'never',
-          link: 'never',
+          paypal: 'never',
           amazonPay: 'never',
         },
-        layout: {
-          maxColumns: 1,
-          overflow: 'never',
-        },
-        buttonTheme: {
-          paypal: 'gold',
-        },
         buttonType: {
-          paypal: 'pay',
+          applePay: 'buy',
+          googlePay: 'buy',
         },
       }}
     />

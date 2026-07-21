@@ -16,7 +16,7 @@ export default function CardForm({
 }: {
   email: string;
   emailValid: boolean;
-  ensurePIAmountSynced: () => Promise<void>;
+  ensurePIAmountSynced?: () => Promise<void>;
   totalLabel: string;
 }) {
   const stripe = useStripe();
@@ -35,7 +35,7 @@ export default function CardForm({
     setCardError('');
     setIsProcessing(true);
 
-    await ensurePIAmountSynced();
+    await ensurePIAmountSynced?.();
 
     const { error } = await stripe.confirmPayment({
       elements,
