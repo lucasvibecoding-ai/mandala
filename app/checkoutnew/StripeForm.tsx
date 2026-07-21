@@ -132,8 +132,13 @@ export default function StripeForm({ email, onEmailChange, paypalEmail, totalLab
         onConfirm={onExpressCheckoutConfirm}
         onClick={onExpressCheckoutClick}
         options={{
-          // PayPal now shows as a gold express button through Stripe (click-to-pay),
-          // instead of the old separate PayPal SDK button. Apple/Google Pay unchanged.
+          // Single column: every express method renders as a full-width button stacked
+          // vertically (Apple/Google Pay + Link, then PayPal on its own full-width line
+          // below). overflow 'never' keeps them all visible instead of a "more" menu.
+          layout: {
+            maxColumns: 1,
+            overflow: 'never',
+          },
           buttonTheme: {
             paypal: 'gold',
           },
