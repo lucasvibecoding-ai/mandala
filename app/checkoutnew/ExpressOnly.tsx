@@ -70,6 +70,8 @@ export default function ExpressOnly({
         onConfirm={onConfirm}
         onClick={onClick}
         options={{
+          phoneNumberRequired: false,
+          shippingAddressRequired: false,
           layout: {
             maxColumns: 1,
             overflow: 'never',
