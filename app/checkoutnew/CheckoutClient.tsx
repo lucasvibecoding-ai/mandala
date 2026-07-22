@@ -75,7 +75,14 @@ export default function CheckoutClient() {
   }, [paymentIntentId, bumpSelected]);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+    // Apple touch devices (iPhone/iPad — incl. iPads and iPhones in "desktop"/tablet view,
+    // which masquerade as MacIntel but report touch points) NEVER get a PayPal button from
+    // Stripe's Express Checkout Element, at any viewport width. So they always use the
+    // custom-PayPal-button layout; everything else switches on width.
+    const appleTouch =
+      /iPhone|iPod|iPad/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const check = () => setIsMobile(appleTouch || window.innerWidth < 768);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
