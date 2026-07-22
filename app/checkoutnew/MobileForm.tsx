@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-  PaymentElement,
+  CardElement,
   ExpressCheckoutElement,
   useStripe,
   useElements,
@@ -13,7 +13,25 @@ const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
 const EMAIL_ERROR = 'Please enter a valid email address above to continue.';
 
-export default function MobileForm({ email, onEmailChange, totalLabel, includeBump, paymentIntentId }: { email: string; onEmailChange: (v: string) => void; totalLabel: string; includeBump: boolean; paymentIntentId: string }) {
+// MOBILE experiment: the card field is a card-only CardElement (no method list), so PayPal
+// cannot appear inside the card box. The single Express Checkout Element still offers all
+// express methods. This tests whether, with no card-box fallback, Stripe renders PayPal as an
+// express button on mobile, or simply hides it.
+export default function MobileForm({
+  email,
+  onEmailChange,
+  clientSecret,
+  totalLabel,
+  includeBump,
+  paymentIntentId,
+}: {
+  email: string;
+  onEmailChange: (v: string) => void;
+  clientSecret: string;
+  totalLabel: string;
+  includeBump: boolean;
+  paymentIntentId: string;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -27,20 +45,11 @@ export default function MobileForm({ email, onEmailChange, totalLabel, includeBu
     setCardError('');
   };
 
-  const showCardEmailError = () => {
-    setCardError(EMAIL_ERROR);
-    setExpressError('');
-  };
-
   const clearErrors = () => {
     setExpressError('');
     setCardError('');
   };
 
-  // Defensive: force the PaymentIntent's amount + metadata to match the
-  // current bump state right before any confirm. Prevents a race where the
-  // buyer toggles the bump and immediately clicks Pay before the on-toggle
-  // useEffect update has reached the server.
   const ensurePIAmountSynced = async () => {
     if (!paymentIntentId) return;
     try {
@@ -57,31 +66,33 @@ export default function MobileForm({ email, onEmailChange, totalLabel, includeBu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailValid) {
-      showCardEmailError();
+      setCardError(EMAIL_ERROR);
       return;
     }
     if (!stripe || !elements) return;
+    const card = elements.getElement(CardElement);
+    if (!card) return;
 
     clearErrors();
     setIsProcessing(true);
 
     await ensurePIAmountSynced();
 
-    const { error: submitError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/success`,
-        // Attach the buyer's email as billing details (NOT receipt_email) so the webhook /
-        // course-access can still resolve it from the charge, without triggering Stripe's
-        // automatic email receipt. receipt_email would override the dashboard toggle.
-        payment_method_data: {
-          billing_details: { email },
-        },
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card,
+        billing_details: { email },
       },
     });
 
-    if (submitError) {
-      setCardError(submitError.message || 'Payment failed. Please try again.');
+    if (error) {
+      setCardError(error.message || 'Payment failed. Please try again.');
+      setIsProcessing(false);
+      return;
+    }
+    if (paymentIntent && paymentIntent.status === 'succeeded') {
+      window.location.href = `/success?payment_intent=${paymentIntent.id}&redirect_status=succeeded`;
+    } else {
       setIsProcessing(false);
     }
   };
@@ -97,9 +108,6 @@ export default function MobileForm({ email, onEmailChange, totalLabel, includeBu
 
     await ensurePIAmountSynced();
 
-    // For Apple/Google Pay the buyer's email comes from the wallet (requested via
-    // emailRequired in onExpressCheckoutClick) and lands in the charge's billing details,
-    // so we do NOT set receipt_email here — that would trigger Stripe's auto-receipt.
     const { error: confirmError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -120,12 +128,7 @@ export default function MobileForm({ email, onEmailChange, totalLabel, includeBu
       showExpressEmailError();
       return;
     }
-    // Apple/Google Pay reads the amount from the PaymentIntent when the
-    // sheet opens. Sync the bump state to the PI before letting the sheet
-    // render so the buyer sees and confirms the right total.
     await ensurePIAmountSynced();
-    // Ask the wallet for the buyer's email so it lands in the charge's billing details
-    // (our backend reads it there) now that we no longer set receipt_email.
     event.resolve({ emailRequired: true });
   };
 
@@ -141,10 +144,6 @@ export default function MobileForm({ email, onEmailChange, totalLabel, includeBu
         onConfirm={onExpressCheckoutConfirm}
         onClick={onExpressCheckoutClick}
         options={{
-          // One column so every express method (Apple/Google Pay, Link, PayPal) is a full-width
-          // button stacked vertically. This is a SINGLE Express Checkout Element, which renders
-          // reliably on mobile + desktop (unlike a separate PayPal-only element), keeps Link, and
-          // still gives PayPal a prominent full-width button.
           layout: {
             maxColumns: 1,
             overflow: 'never',
@@ -167,25 +166,28 @@ export default function MobileForm({ email, onEmailChange, totalLabel, includeBu
       </div>
 
       <form onSubmit={handleSubmit}>
-        <PaymentElement
-          options={{
-            // Card only in this element; PayPal is the gold express button above.
-            paymentMethodOrder: ['card'],
-            // The email is collected by our own field above and passed as billing details
-            // on confirm, so don't render the Payment Element's own email field. This lets
-            // us set billing_details.email without setting receipt_email (which is what was
-            // forcing Stripe's automatic receipt).
-            fields: {
-              billingDetails: {
-                email: 'never',
-              },
-            },
-            wallets: {
-              applePay: 'never',
-              googlePay: 'never',
-            },
+        <div
+          style={{
+            padding: '12px 14px',
+            border: '1px solid #d1d5db',
+            borderRadius: '6px',
+            background: '#fff',
           }}
-        />
+        >
+          <CardElement
+            options={{
+              style: {
+                base: {
+                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                  fontSize: '16px',
+                  color: '#1a2e1a',
+                  '::placeholder': { color: '#9a9689' },
+                },
+                invalid: { color: '#df1b41' },
+              },
+            }}
+          />
+        </div>
         {cardError && (
           <p style={{ color: '#df1b41', fontSize: '14px', marginTop: '12px' }}>
             {cardError}

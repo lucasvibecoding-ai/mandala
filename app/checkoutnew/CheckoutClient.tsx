@@ -664,6 +664,7 @@ export default function CheckoutClient() {
                     <MobileForm
                       email={email}
                       onEmailChange={setEmail}
+                      clientSecret={clientSecret}
                       totalLabel={totalFormatted}
                       includeBump={bumpSelected}
                       paymentIntentId={paymentIntentId}
