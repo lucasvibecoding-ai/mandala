@@ -7,6 +7,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import WalletExpress from './WalletExpress';
 import PayPalExpress from './PayPalExpress';
 import CardForm from './CardForm';
+import ExpressOnly from './ExpressOnly';
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
@@ -655,43 +656,15 @@ export default function CheckoutClient() {
                       </p>
                     )}
 
-                    {/* Row 1: Apple/Google Pay + Link, in their own Elements instance. */}
+                    {/* TEST: express-only. A single Express Checkout Element (all methods),
+                        NO card element at all, to see whether Stripe renders PayPal as a button
+                        on mobile when there is no card fallback. */}
                     <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-                      <WalletExpress
+                      <ExpressOnly
                         emailValid={emailValid}
                         onEmailError={showExpressEmailError}
                         ensurePIAmountSynced={ensurePIAmountSynced}
                         onError={setExpressError}
-                      />
-                    </Elements>
-
-                    {/* Row 2 (full-width PayPal) + the card share ONE Elements instance so the
-                        Payment Element hides PayPal (Stripe de-dupes methods already shown by a
-                        same-group Express Checkout Element), leaving the card section card-only.
-                        Only the wallets above are in a separate instance, so PayPal's one-column
-                        layout doesn't force them full-width. */}
-                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-                      <div style={{ marginTop: 12 }}>
-                        <PayPalExpress
-                          emailValid={emailValid}
-                          onEmailError={showExpressEmailError}
-                          ensurePIAmountSynced={ensurePIAmountSynced}
-                          onError={setExpressError}
-                        />
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
-                        <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
-                        <span style={{ fontSize: 13, color: '#9a9689', whiteSpace: 'nowrap' }}>Or pay with card</span>
-                        <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
-                      </div>
-
-                      <CardForm
-                        email={email}
-                        emailValid={emailValid}
-                        clientSecret={clientSecret}
-                        ensurePIAmountSynced={ensurePIAmountSynced}
-                        totalLabel={totalFormatted}
                       />
                     </Elements>
                   </>
