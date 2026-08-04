@@ -2,9 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    deviceSizes: [640, 828, 1200],
-    imageSizes: [16, 32, 64, 128, 256],
-    minimumCacheTTL: 3600,
+    // Vercel's image-transformation quota is used up, so the optimizer is off
+    // for good: public/ images are pre-sized to ~2x their slots and webp'd
+    // (~/image-generation/manual_optimize_public.py). This also sidesteps the
+    // Next 16 Turbopack dev /_next/image deadlock.
+    unoptimized: true,
   },
 };
 
