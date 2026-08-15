@@ -56,6 +56,14 @@ export async function POST(request: Request) {
         enabled: true,
         allow_redirects: 'always',
       },
+      // PayPal receipts showed blank item fields because a PaymentIntent has no
+      // line items; `reference` maps to PayPal's invoice ID, the one field the
+      // buyer sees. Unique suffix in case duplicate-invoice blocking is on.
+      payment_method_options: {
+        paypal: {
+          reference: `Mandala Masterclass #${Date.now().toString(36)}`,
+        },
+      },
       metadata,
     });
 
