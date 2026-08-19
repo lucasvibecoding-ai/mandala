@@ -320,10 +320,11 @@ export default function CheckoutClient() {
 
         .order-bump {
           display: grid;
-          grid-template-columns: auto auto 1fr;
+          grid-template-columns: auto 1fr;
           grid-template-areas:
-            "check image headline"
-            "check image sub";
+            "check headline"
+            "check sub"
+            "image image";
           column-gap: 14px;
           row-gap: 4px;
           padding: 16px;
@@ -356,26 +357,38 @@ export default function CheckoutClient() {
 
         .order-bump .bump-image {
           grid-area: image;
-          width: 84px;
-          height: 84px;
+          width: 82%;
+          max-width: 280px;
+          aspect-ratio: 4 / 3;
+          height: auto;
           object-fit: cover;
+          justify-self: center;
           border-radius: 6px;
           background: #ffffff;
           border: 1px solid rgba(0,0,0,0.06);
-          align-self: center;
+          margin-top: 10px;
         }
 
         .order-bump .bump-headline {
           grid-area: headline;
+          display: flex;
+          align-items: center;
+          gap: 8px;
           font-size: 15px;
           font-weight: 600;
           color: #1a2e1a;
           line-height: 1.4;
         }
 
-        .order-bump .bump-yes {
-          color: #b97c0e;
+        .order-bump .bump-price {
+          margin-left: auto;
+          background: #b97c0e;
+          color: #ffffff;
+          font-size: 13px;
           font-weight: 700;
+          padding: 2px 10px;
+          border-radius: 999px;
+          white-space: nowrap;
         }
 
         .order-bump .bump-sub {
@@ -388,20 +401,11 @@ export default function CheckoutClient() {
 
         @media (max-width: 768px) {
           .order-bump {
-            grid-template-columns: auto 1fr auto;
-            grid-template-areas:
-              "check headline image"
-              "sub   sub      sub";
-            row-gap: 10px;
+            padding: 14px;
           }
           .order-bump .bump-image {
-            width: 84px;
-            height: 84px;
-            justify-self: end;
-            align-self: center;
-          }
-          .order-bump .bump-sub {
-            margin-top: 0;
+            width: 74%;
+            margin-top: 8px;
           }
         }
 
@@ -645,18 +649,19 @@ export default function CheckoutClient() {
                   checked={bumpSelected}
                   onChange={(e) => setBumpSelected(e.target.checked)}
                 />
+                <div className="bump-headline">
+                  <span>Add the Mandala Pack</span>
+                  <span className="bump-price">+{symbol}17</span>
+                </div>
+                <div className="bump-sub">
+                  150 printable ready-to-color mandalas. Lifetime access.
+                </div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/mandalas.webp"
                   alt=""
                   className="bump-image"
                 />
-                <div className="bump-headline">
-                  <span className="bump-yes">YES!</span> Add the Mandala Pack — 150 printable mandalas — for just {symbol}17
-                </div>
-                <div className="bump-sub">
-                  A one-time upgrade. Lifetime access to 150 ready-to-color mandala designs alongside your masterclass.
-                </div>
               </label>
 
               <div className="form-divider" />
