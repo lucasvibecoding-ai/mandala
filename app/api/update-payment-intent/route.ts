@@ -33,19 +33,11 @@ export async function POST(request: Request) {
     const price = product.default_price as Stripe.Price;
     const amount = (price.unit_amount ?? 0) + (includeBump ? BUMP_AMOUNT_CENTS : 0);
 
-    const existing = await stripe.paymentIntents.retrieve(piId);
-    const nextMetadata: Record<string, string> = {
-      ...(existing.metadata as Record<string, string>),
-    };
-    if (includeBump) {
-      nextMetadata.includes_addon = 'mandala-pack';
-    } else {
-      delete nextMetadata.includes_addon;
-    }
-
+    // Stripe MERGES metadata on update — omitting a key does NOT remove it. A key is
+    // only unset by posting an empty string, so untick must send includes_addon: ''.
     const updated = await stripe.paymentIntents.update(piId, {
       amount,
-      metadata: nextMetadata,
+      metadata: { includes_addon: includeBump ? 'mandala-pack' : '' },
     });
 
     return NextResponse.json({ amount: updated.amount });
