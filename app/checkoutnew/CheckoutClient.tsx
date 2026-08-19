@@ -654,7 +654,7 @@ export default function CheckoutClient() {
                   <span className="bump-price">+{symbol}17</span>
                 </div>
                 <div className="bump-sub">
-                  150 printable ready-to-color mandalas. Lifetime access.
+                  150 designs to color: floral, geometric, dotwork, celestial and more. One mandala a day to unwind. Lifetime access.
                 </div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
