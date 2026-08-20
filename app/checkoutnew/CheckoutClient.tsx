@@ -380,8 +380,27 @@ export default function CheckoutClient() {
           line-height: 1.4;
         }
 
-        .order-bump .bump-price {
+        .order-bump .bump-yes {
+          color: #e8442e;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+
+        .order-bump .bump-pricing {
           margin-left: auto;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .order-bump .bump-anchor {
+          color: #9aa1ab;
+          text-decoration: line-through;
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .order-bump .bump-price {
           background: #b97c0e;
           color: #ffffff;
           font-size: 13px;
@@ -651,8 +670,12 @@ export default function CheckoutClient() {
                   onChange={(e) => setBumpSelected(e.target.checked)}
                 />
                 <div className="bump-headline">
+                  <span className="bump-yes">&#9654; YES!</span>
                   <span>Add the 150 Mandala Pack</span>
-                  <span className="bump-price">+{symbol}17</span>
+                  <span className="bump-pricing">
+                    <span className="bump-anchor">{symbol}57</span>
+                    <span className="bump-price">+{symbol}17</span>
+                  </span>
                 </div>
                 <div className="bump-sub">
                   150 designs to color: floral, geometric, dotwork, celestial and more. One mandala a day to unwind. Lifetime access.
