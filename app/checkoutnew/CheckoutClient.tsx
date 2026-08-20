@@ -674,7 +674,7 @@ export default function CheckoutClient() {
                   <span>Add the 150 Mandala Pack</span>
                   <span className="bump-pricing">
                     <span className="bump-anchor">{symbol}57</span>
-                    <span className="bump-price">+{symbol}17</span>
+                    <span className="bump-price">{symbol}17</span>
                   </span>
                 </div>
                 <div className="bump-sub">
