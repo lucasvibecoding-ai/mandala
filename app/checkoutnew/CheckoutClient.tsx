@@ -650,7 +650,7 @@ export default function CheckoutClient() {
                   onChange={(e) => setBumpSelected(e.target.checked)}
                 />
                 <div className="bump-headline">
-                  <span>Add the Mandala Pack</span>
+                  <span>Add the Mandala Pack (150 mandalas)</span>
                   <span className="bump-price">+{symbol}17</span>
                 </div>
                 <div className="bump-sub">
