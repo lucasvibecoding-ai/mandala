@@ -129,8 +129,12 @@ export async function POST(request: Request) {
         let postalCode: string | null = null;
         let stripeProof: Record<string, unknown> | null = null;
 
+        // The charge's timestamp is when the money actually moved; the PI can be days
+        // older if the buyer left checkout open, which would misdate the Airtable row.
+        let chargeCreated: number | null = null;
         if (paymentIntent.latest_charge) {
           const charge = await stripe.charges.retrieve(paymentIntent.latest_charge as string);
+          chargeCreated = charge.created;
           customerEmail = customerEmail || charge.billing_details?.email || null;
           customerName = charge.billing_details?.name || null;
           cardCountry = charge.payment_method_details?.card?.country ?? null;
@@ -203,7 +207,7 @@ export async function POST(request: Request) {
         if (customerEmail) {
           await recordPurchase({
             transactionId: paymentIntent.id,
-            date: new Date(paymentIntent.created * 1000),
+            date: new Date((chargeCreated ?? paymentIntent.created) * 1000),
             amount: paymentIntent.amount / 100,
             currency: paymentIntent.currency,
             provider: 'Stripe',
