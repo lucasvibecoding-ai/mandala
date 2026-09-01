@@ -90,7 +90,7 @@ interface RecordPurchaseInput {
   transactionId: string;
   date: Date;
   amount: number;
-  /** How they paid: Card, Apple Pay, Google Pay, PayPal, Link */
+  /** Stripe, or PayPal when the buyer paid with PayPal (even through Stripe) */
   provider: string;
   email: string;
   firstName?: string;

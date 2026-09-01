@@ -134,17 +134,11 @@ export async function POST(request: Request) {
         // The charge's timestamp is when the money actually moved; the PI can be days
         // older if the buyer left checkout open, which would misdate the Airtable row.
         let chargeCreated: number | null = null;
-        let payMethod = 'Card';
+        let payMethod = 'Stripe';
         if (paymentIntent.latest_charge) {
           const charge = await stripe.charges.retrieve(paymentIntent.latest_charge as string);
           chargeCreated = charge.created;
-          const wallet = charge.payment_method_details?.card?.wallet?.type;
-          payMethod =
-            charge.payment_method_details?.type === 'paypal' ? 'PayPal'
-            : charge.payment_method_details?.type === 'link' ? 'Link'
-            : wallet === 'apple_pay' ? 'Apple Pay'
-            : wallet === 'google_pay' ? 'Google Pay'
-            : 'Card';
+          payMethod = charge.payment_method_details?.type === 'paypal' ? 'PayPal' : 'Stripe';
           customerEmail = customerEmail || charge.billing_details?.email || null;
           customerName = charge.billing_details?.name || null;
           cardCountry = charge.payment_method_details?.card?.country ?? null;
