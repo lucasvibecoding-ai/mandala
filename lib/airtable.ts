@@ -59,7 +59,7 @@ async function createCustomer(
   if (firstName) fields['First Name'] = firstName;
   const data = (await airtableFetch(config, 'Customers', {
     method: 'POST',
-    body: JSON.stringify({ fields }),
+    body: JSON.stringify({ fields, typecast: true }),
   })) as { id: string };
   return data.id;
 }
@@ -90,11 +90,14 @@ interface RecordPurchaseInput {
   transactionId: string;
   date: Date;
   amount: number;
-  provider: 'Stripe' | 'PayPal';
+  /** How they paid: Card, Apple Pay, Google Pay, PayPal, Link */
+  provider: string;
   email: string;
   firstName?: string;
   includeAddon?: boolean;
   currency?: string;
+  /** The buyer's other address when checkout and PayPal disagree (see below). */
+  secondEmail?: string | null;
 }
 
 export async function recordPurchase(input: RecordPurchaseInput): Promise<void> {
@@ -128,19 +131,29 @@ export async function recordPurchase(input: RecordPurchaseInput): Promise<void> 
     if (input.includeAddon !== undefined) {
       fields['Includes Pack'] = !!input.includeAddon;
     }
+    // The Customer link stays the PAYER's address so accounting and the fiscal
+    // invoice keep matching. When the buyer typed a different address at checkout,
+    // that one goes here so support can find them by either.
+    if (input.secondEmail) {
+      fields['Second Email'] = input.secondEmail;
+    }
+    // These two columns may not exist in the shared base yet. If Airtable rejects
+    // one as unknown, record the purchase without them rather than lose the row.
+    const optional = ['Includes Pack', 'Second Email'];
     try {
       await airtableFetch(config, 'Purchases', {
         method: 'POST',
-        body: JSON.stringify({ fields }),
+        body: JSON.stringify({ fields, typecast: true }),
       });
     } catch (err) {
-      if ('Includes Pack' in fields && /UNKNOWN_FIELD_NAME|Includes Pack/i.test(String(err))) {
-        delete fields['Includes Pack'];
+      const present = optional.filter((k) => k in fields);
+      if (present.length > 0 && /UNKNOWN_FIELD_NAME|Includes Pack|Second Email/i.test(String(err))) {
+        for (const k of present) delete fields[k];
         await airtableFetch(config, 'Purchases', {
           method: 'POST',
-          body: JSON.stringify({ fields }),
+          body: JSON.stringify({ fields, typecast: true }),
         });
-        console.warn('Airtable: "Includes Pack" field missing — recorded purchase without it');
+        console.warn(`Airtable: missing field(s) ${present.join(', ')} — recorded purchase without them`);
       } else {
         throw err;
       }
