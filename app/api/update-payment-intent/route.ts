@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     const body = (await request.json().catch(() => ({}))) as {
       paymentIntentId?: string;
       includeBump?: boolean;
+      email?: string;
     };
     const piId = body.paymentIntentId;
     const includeBump = body.includeBump === true;
@@ -24,6 +25,19 @@ export async function POST(request: Request) {
         { error: 'Missing paymentIntentId' },
         { status: 400 }
       );
+    }
+
+    // Email-only update: stash the address the buyer TYPED into the PI metadata.
+    // PayPal overwrites billing_details.email with the PayPal account address, so
+    // without this the typed address is lost the moment the tab closes and the
+    // webhook can never tell the two apart. Metadata-only, so it must not touch
+    // the amount (that would silently undo the order bump).
+    if (typeof body.email === 'string' && body.includeBump === undefined) {
+      const email = body.email.trim().toLowerCase();
+      const updated = await stripe.paymentIntents.update(piId, {
+        metadata: { buyer_email: email },
+      });
+      return NextResponse.json({ amount: updated.amount });
     }
 
     const productId = process.env.STRIPE_PRODUCT_ID!;

@@ -39,6 +39,15 @@ async function verifiedEmail(body: {
     const pi = await stripe.paymentIntents.retrieve(body.paymentIntent);
     if (pi.status !== 'succeeded') return null;
     if (pi.metadata?.product_id !== process.env.STRIPE_PRODUCT_ID) return null;
+    // Prefer the address the buyer typed at checkout (stashed on the PI while they
+    // typed). On PayPal, billing_details holds the PayPal account address instead,
+    // and the success-page button should sign them in as the account they expect.
+    // The webhook still invites both addresses.
+    const typed =
+      typeof pi.metadata?.buyer_email === 'string' && pi.metadata.buyer_email.includes('@')
+        ? pi.metadata.buyer_email.trim().toLowerCase()
+        : null;
+    if (typed) return typed;
     let email = pi.receipt_email;
     if (!email && pi.latest_charge) {
       const charge = await stripe.charges.retrieve(pi.latest_charge as string);
