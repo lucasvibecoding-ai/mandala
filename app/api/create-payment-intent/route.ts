@@ -67,10 +67,25 @@ export async function POST(request: Request) {
       metadata,
     });
 
+    // When the PayPal watch has declared PayPal down everywhere, the checkout
+    // hides its PayPal buttons; if the status service is unreachable we fail
+    // open and keep showing them.
+    let paypalDown = false;
+    try {
+      const st = await fetch('https://course-business-admin.vercel.app/api/paypal-status', {
+        signal: AbortSignal.timeout(1500),
+        cache: 'no-store',
+      });
+      paypalDown = (await st.json()).down === true;
+    } catch {
+      // status unreachable: fail open
+    }
+
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
       currency,
+      paypalDown,
     });
   } catch (error) {
     console.error('Payment intent error:', error);
