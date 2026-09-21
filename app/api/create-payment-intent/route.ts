@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       // buyer sees. Unique suffix in case duplicate-invoice blocking is on.
       payment_method_options: {
         paypal: {
-          reference: `Mandala Masterclass #${Date.now().toString(36)}`,
+          reference: `Mandala #${Date.now().toString(36)}`,
         },
       },
       metadata,
