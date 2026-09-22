@@ -262,6 +262,7 @@ export async function POST(request: Request) {
             amount: paymentIntent.amount / 100,
             currency: paymentIntent.currency,
             provider: payMethod,
+            buyerCountry,
             email: customerEmail,
             firstName,
             // Customer stays the payer; the address they typed at checkout is kept

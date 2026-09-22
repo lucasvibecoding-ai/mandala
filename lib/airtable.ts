@@ -1,3 +1,5 @@
+import { vatTreatment } from './vat-country';
+
 const AIRTABLE_API = 'https://api.airtable.com/v0';
 
 interface AirtableConfig {
@@ -96,6 +98,8 @@ interface RecordPurchaseInput {
   firstName?: string;
   includeAddon?: boolean;
   currency?: string;
+  /** ISO-2 country the sale is attributed to; decides the VAT included in `amount`. */
+  buyerCountry?: string | null;
   /** The buyer's other address when checkout and PayPal disagree (see below). */
   secondEmail?: string | null;
 }
@@ -124,6 +128,15 @@ export async function recordPurchase(input: RecordPurchaseInput): Promise<void> 
       Project: [config.projectId],
       Customer: [customerId],
       Currency: (input.currency || 'usd').toLowerCase(),
+      // Country + the VAT rate already included in Amount, so the revenue tables can show
+      // money net of VAT. Left blank when no country resolved, and 0 before the VAT era —
+      // a blank rate means "no VAT", which is every sale before 2026-09-22.
+      ...(input.buyerCountry
+        ? {
+            'Buyer Country': input.buyerCountry,
+            'VAT Rate': vatTreatment(input.buyerCountry).rate,
+          }
+        : {}),
     };
     // Only sites that sell an add-on pass includeAddon. The shared base's "Includes Pack"
     // checkbox may not exist yet, so if Airtable rejects it as unknown, record the purchase
