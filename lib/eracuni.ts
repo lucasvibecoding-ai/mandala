@@ -9,6 +9,8 @@
 // org-specific endpoint. `apiTransactionId` makes SalesInvoiceCreate idempotent, so retrying
 // with the same payment id NEVER creates a duplicate invoice.
 
+import { vatTreatment } from './vat-country';
+
 export type FiscalInvoiceInput = {
   apiTransactionId: string; // Stripe PaymentIntent id or PayPal order id (idempotency key)
   buyerName?: string;
@@ -18,9 +20,22 @@ export type FiscalInvoiceInput = {
   currency: string; // e.g. 'EUR'
   methodOfPayment: 'Stripe' | 'PayPal';
   includeAddon?: boolean; // buyer added the order bump -> append the addon product line
+  buyerCountry?: string | null; // ISO-2, decides the vrsta prodaje (see lib/vat-country.ts)
 };
 
 export type FiscalInvoiceResult = { publicUrl: string; documentId?: string };
+
+// e-računi field names for the cross-border VAT fields, from the SalesInvoice / SalesQuote
+// API docs (e-racuni.com/Croatian/p-1001761 and WS+API+SalesQuote). `vatTransactionType` on a
+// line item is confirmed by the official example ("vatTransactionType": "16"); the rest are
+// documented on the quote object, which shares the document fields, and are re-checked by the
+// probe. This block is the only place that has to change if a spelling turns out wrong.
+const FIELD = {
+  buyerCountry: 'buyerCountry', // ISO-2
+  vatTransactionType: 'vatTransactionType', // vrsta prodaje, document AND item level
+  remarks: 'remarks', // free text printed on the document
+  vatCountryIsoCode: 'vatCountryIsoCode', // country whose VAT rate applies (OSS)
+} as const;
 
 // Error that records whether the failure is permanent (bad payload / validation -> retrying
 // won't help) or transient (network / 5xx -> worth retrying within the deadline).
@@ -43,8 +58,8 @@ function config() {
 }
 
 function buildSalesInvoice(input: FiscalInvoiceInput) {
-  // type "Retail" = consumer receipt (price is the final tax-inclusive amount). We are NOT in
-  // the VAT system, so e-računi adds the small-taxpayer exemption note. dateOfSupplyFrom
+  // type "Retail" = consumer receipt: the price is the FINAL tax-inclusive amount the buyer
+  // paid, and VAT is carved out of it rather than added on top. dateOfSupplyFrom
   // (YYYY-MM-DD) is required. businessUnit = fiscalized poslovni prostor (optional env).
   // documentLanguage must be a full language NAME: Slovene, English, German or Croatian (NOT an
   // ISO code like "en"). Map common ISO codes so E_RACUNI_LANGUAGE=en still works; default to
@@ -63,26 +78,52 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
   const productCode = process.env.E_RACUNI_PRODUCT_CODE;
   const addonProductCode = process.env.E_RACUNI_ADDON_PRODUCT_CODE;
 
+  // Buyer country -> vrsta prodaje + rate. Before VAT_START this yields vrsta null and the
+  // payload stays exactly as it was, so a deploy can land before the e-računi org is flipped.
+  const treatment = vatTreatment(input.buyerCountry);
+
   // With a product code set, reference the defined artikl so the sale corresponds to it —
   // e-računi supplies its price, unit, VAT and name. If the buyer added the order bump, append
   // the addon artikl as its own line. Without a product code we fall back to a single ad-hoc
   // line (description + the exact paid amount, bump included).
+  // The vrsta prodaje rides on every line as well as on the document: the API docs set it per
+  // item ("vatTransactionType": "16" in their reverse-charge example), and e-računi's own help
+  // says a document-level value only reaches the lines with "prijenos vrste prodaje na stavke".
+  const lineVat = treatment.vrsta !== null ? { vatTransactionType: String(treatment.vrsta) } : {};
+
   const items = productCode
     ? [
-        { productCode, quantity: 1 },
+        { productCode, quantity: 1, ...lineVat },
         ...(input.includeAddon && addonProductCode
-          ? [{ productCode: addonProductCode, quantity: 1 }]
+          ? [{ productCode: addonProductCode, quantity: 1, ...lineVat }]
           : []),
       ]
     : [
         {
           description: input.description,
           quantity: 1,
-          unit: 'kom',
+          // type "Retail" means `price` is the final price INCLUDING all taxes, so the buyer
+          // still pays exactly 47 and e-računi carves the VAT out of it (`netPrice` would be
+          // the other way round and would add tax on top).
           price: input.amount,
-          vatPercentage: 0,
+          unit: 'kom',
+          vatPercentage: treatment.rate,
+          ...lineVat,
         },
       ];
+
+  // Vrsta prodaje + buyer country on the document, transferred down to the lines. Non-EU
+  // documents also carry the legal clause explaining why no VAT is charged.
+  const crossBorder =
+    treatment.vrsta !== null
+      ? {
+          [FIELD.buyerCountry]: treatment.country,
+          [FIELD.vatTransactionType]: String(treatment.vrsta),
+          // Only for OSS documents: the member state whose rate is charged.
+          ...(treatment.vrsta === 100 ? { [FIELD.vatCountryIsoCode]: treatment.country } : {}),
+          ...(treatment.note ? { [FIELD.remarks]: treatment.note } : {}),
+        }
+      : {};
 
   return {
     dateOfSupplyFrom,
@@ -94,6 +135,7 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
     totalCurrency: input.currency,
     ...(documentLanguage ? { documentLanguage } : {}),
     ...(businessUnit ? { businessUnit } : {}),
+    ...crossBorder,
     Items: items,
   };
 }
