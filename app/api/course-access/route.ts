@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import Stripe from 'stripe';
+import { PROOF_SITE, requestInfo, sendProof } from '../../../lib/proof';
 
 // Add-on for the success page: turn a just-completed payment into a one-click
 // course login/setup link, so the buyer does not have to open the email.
@@ -79,6 +80,25 @@ export async function POST(request: Request) {
     const email = await verifiedEmail(body);
     if (!email) return NextResponse.json({ ready: false });
 
+    // Proof of delivery: the thank-you page of a verified payment was opened here.
+    const orderId = body.paymentIntent || body.paypalOrder || null;
+    const info = requestInfo(request.headers);
+    after(() =>
+      sendProof([
+        {
+          eventId: `thankyou:${orderId}`,
+          kind: 'thankyou.shown',
+          orderId,
+          courseSlug: 'mandala-masterclass',
+          email,
+          ...info,
+          data: {
+            accessButton: !!(process.env.COURSE_PLATFORM_URL && process.env.COURSE_PLATFORM_SECRET),
+          },
+        },
+      ]),
+    );
+
     if (!process.env.COURSE_PLATFORM_URL || !process.env.COURSE_PLATFORM_SECRET) {
       return NextResponse.json({ ready: false });
     }
@@ -91,7 +111,12 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${process.env.COURSE_PLATFORM_SECRET}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, courseSlug: 'mandala-masterclass' }),
+      body: JSON.stringify({
+        email,
+        courseSlug: 'mandala-masterclass',
+        // Proof of delivery: ties this grant and its logged link to the order.
+        ...(orderId ? { orderId, site: PROOF_SITE, role: 'typed', via: 'thankyou' } : {}),
+      }),
     });
 
     // The account may already exist because the Stripe webhook / PayPal capture granted access
@@ -99,9 +124,18 @@ export async function POST(request: Request) {
     // and the course is live, still show the button, pointing at the generic sign-in page, so it
     // never silently disappears on the buyer.
     if (grantRes.ok) {
-      const data = (await grantRes.json()) as { actionUrl?: string; isNewUser?: boolean };
+      const data = (await grantRes.json()) as {
+        actionUrl?: string;
+        trackedUrl?: string | null;
+        isNewUser?: boolean;
+      };
       if (data.actionUrl) {
-        return NextResponse.json({ actionUrl: data.actionUrl, isNewUser: !!data.isNewUser, email });
+        // trackedUrl is the platform's logged version of the link (proof of delivery).
+        return NextResponse.json({
+          actionUrl: data.trackedUrl || data.actionUrl,
+          isNewUser: !!data.isNewUser,
+          email,
+        });
       }
     } else {
       console.error('grant-access failed:', grantRes.status, await grantRes.text());

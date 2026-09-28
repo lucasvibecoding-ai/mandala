@@ -45,6 +45,9 @@ export async function POST(request: Request) {
     if (ipRegion) metadata.ip_region = ipRegion;
     if (ipCityRaw) metadata.ip_city = decodeURIComponent(ipCityRaw);
     if (ipAddress) metadata.ip_address = ipAddress;
+    // The checkout browser, matched later against the browser that opens the course.
+    const checkoutBrowser = request.headers.get('user-agent');
+    if (checkoutBrowser) metadata.user_agent = checkoutBrowser.slice(0, 500);
 
     // Price in USD for the Americas + AU/NZ + dollar countries; EUR for everyone else.
     const currency = currencyForCountry(ipCountry);
