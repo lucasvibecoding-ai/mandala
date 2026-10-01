@@ -57,6 +57,18 @@ function config() {
   return { endpoint, username, secretKey, token };
 }
 
+// e-računi cannot split a name with a bare initial ("Shawn K Stoner") into a first and a last
+// name; since the buyer country is sent, those invoices silently missed fiscalization (no JIR,
+// 5 cases 23-30 Sept 2026). Leave single-letter initials out; if nothing is left, keep the name.
+function invoiceBuyerName(name?: string): string {
+  const raw = (name ?? '').trim().replace(/\s+/g, ' ');
+  const cleaned = raw
+    .split(' ')
+    .filter((w) => !/^\p{L}\.?$/u.test(w))
+    .join(' ');
+  return cleaned || raw || 'Kupac';
+}
+
 function buildSalesInvoice(input: FiscalInvoiceInput) {
   // type "Retail" = consumer receipt: the price is the FINAL tax-inclusive amount the buyer
   // paid, and VAT is carved out of it rather than added on top. dateOfSupplyFrom
@@ -127,7 +139,7 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
 
   return {
     dateOfSupplyFrom,
-    buyerName: input.buyerName || 'Kupac',
+    buyerName: invoiceBuyerName(input.buyerName),
     buyerEMail: input.buyerEmail,
     type: 'Retail',
     methodOfPayment: input.methodOfPayment,
