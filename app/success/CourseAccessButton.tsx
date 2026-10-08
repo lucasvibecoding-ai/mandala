@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import MembershipUpsell from './MembershipUpsell';
 
 // Add-on: fetches the buyer's one-click course access link from the just-completed
 // payment and shows a button, so they can log in without opening the email.
@@ -12,6 +13,8 @@ export default function CourseAccessButton() {
   const paymentIntent = sp.get('payment_intent');
   const redirectStatus = sp.get('redirect_status');
   const paypalOrder = sp.get('paypal_order');
+  const clientSecret = sp.get('payment_intent_client_secret');
+  const joinedMembership = sp.get('membership') === 'joined';
 
   const [status, setStatus] = useState<'loading' | 'ready' | 'hidden'>('loading');
   const [actionUrl, setActionUrl] = useState('');
@@ -59,7 +62,17 @@ export default function CourseAccessButton() {
     };
   }, [paymentIntent, redirectStatus, paypalOrder]);
 
-  if (status === 'hidden') return null;
+  // The Aiko Arts membership offer sits under the access card (it decides itself whether to show).
+  const upsell = (
+    <MembershipUpsell
+      paymentIntent={redirectStatus === 'succeeded' ? paymentIntent : null}
+      clientSecret={clientSecret}
+      actionUrl={actionUrl}
+      joinedFromCheckout={joinedMembership}
+    />
+  );
+
+  if (status === 'hidden') return upsell;
 
   if (status === 'loading') {
     return (
@@ -77,30 +90,33 @@ export default function CourseAccessButton() {
   }
 
   return (
-    <div
-      className="rounded-xl p-6 sm:p-8 text-center"
-      style={{ background: '#fff', border: '2px solid rgba(45,74,143,0.3)' }}
-    >
-      <p style={{ color: '#6b7089', margin: 0 }}>
-        {isNewUser ? 'Set your password and jump straight in:' : 'Your course is ready:'}
-      </p>
-      {email ? (
-        <p style={{ color: '#1a1f3d', margin: '14px 0 0', fontSize: 15 }}>
-          Your login email is <strong>{email}</strong>
+    <>
+      <div
+        className="rounded-xl p-6 sm:p-8 text-center"
+        style={{ background: '#fff', border: '2px solid rgba(45,74,143,0.3)' }}
+      >
+        <p style={{ color: '#6b7089', margin: 0 }}>
+          {isNewUser ? 'Set your password and jump straight in:' : 'Your course is ready:'}
         </p>
-      ) : null}
-      <div style={{ marginTop: 20 }}>
-        <a
-          href={actionUrl}
-          className="inline-block w-full sm:w-auto px-10 py-4 rounded-lg text-lg font-medium transition-all hover:shadow-lg"
-          style={{ background: '#2d4a8f', color: '#ffffff', textDecoration: 'none' }}
-        >
-          {isNewUser ? 'Set up your account' : 'Log in to your course'}
-        </a>
+        {email ? (
+          <p style={{ color: '#1a1f3d', margin: '14px 0 0', fontSize: 15 }}>
+            Your login email is <strong>{email}</strong>
+          </p>
+        ) : null}
+        <div style={{ marginTop: 20 }}>
+          <a
+            href={actionUrl}
+            className="inline-block w-full sm:w-auto px-10 py-4 rounded-lg text-lg font-medium transition-all hover:shadow-lg"
+            style={{ background: '#2d4a8f', color: '#ffffff', textDecoration: 'none' }}
+          >
+            {isNewUser ? 'Set up your account' : 'Log in to your course'}
+          </a>
+        </div>
+        <p style={{ color: '#9a9489', fontSize: 13, margin: '16px 0 0' }}>
+          We also emailed you this link, so you can get back in anytime.
+        </p>
       </div>
-      <p style={{ color: '#9a9489', fontSize: 13, margin: '16px 0 0' }}>
-        We also emailed you this link, so you can get back in anytime.
-      </p>
-    </div>
+      {upsell}
+    </>
   );
 }

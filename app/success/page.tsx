@@ -44,26 +44,6 @@ export default function Success() {
           <CourseAccessButton />
         </Suspense>
 
-        <div className="rounded-xl p-6 sm:p-8 text-left space-y-4 shadow-sm" style={{ background: '#f8f6f3', border: '1px solid rgba(45,74,143,0.15)' }}>
-          <h2 className="text-xl font-serif font-bold text-cream">
-            What happens next:
-          </h2>
-          <ol className="space-y-3 text-muted text-base sm:text-lg">
-            <li className="flex items-start gap-3">
-              <span className="text-gold font-bold flex-shrink-0">1.</span>
-              <span>Check your email for your <strong className="text-cream">login details and course access link</strong></span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-gold font-bold flex-shrink-0">2.</span>
-              <span>Start with <strong className="text-cream">Module 1</strong> to learn the history and foundations of mandala art</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-gold font-bold flex-shrink-0">3.</span>
-              <span>Follow along at your own pace. <strong className="text-cream">No deadlines, no pressure</strong></span>
-            </li>
-          </ol>
-        </div>
-
         <div className="rounded-xl p-6 sm:p-8 text-left space-y-3" style={{ background: '#fff', border: '1px solid rgba(45,74,143,0.15)' }}>
           <h2 className="text-lg font-serif font-bold text-cream">
             Please check your spam folder

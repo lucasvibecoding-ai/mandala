@@ -83,7 +83,7 @@ export default function MobileCardForm({
       return;
     }
     if (paymentIntent && paymentIntent.status === 'succeeded') {
-      window.location.href = `/success?payment_intent=${paymentIntent.id}&redirect_status=succeeded`;
+      window.location.href = `/success?payment_intent=${paymentIntent.id}&payment_intent_client_secret=${encodeURIComponent(paymentIntent.client_secret ?? '')}&redirect_status=succeeded`;
     } else {
       setIsProcessing(false);
     }

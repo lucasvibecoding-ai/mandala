@@ -63,6 +63,9 @@ export async function POST(request: Request) {
       // line items; `reference` maps to PayPal's invoice ID, the one field the
       // buyer sees. Unique suffix in case duplicate-invoice blocking is on.
       payment_method_options: {
+        // Cards (incl. Apple/Google Pay) are kept for the one-click Aiko Arts membership
+        // offer on the thank-you page; Stripe shows the buyer the matching notice.
+        card: { setup_future_usage: 'off_session' },
         paypal: {
           reference: `Mandala #${Date.now().toString(36)}`,
         },
