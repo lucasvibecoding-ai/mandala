@@ -398,11 +398,11 @@ export default async function Home() {
           <section className="instructor">
             <div className="instructor-img">
               <div style={{ width: '100%', aspectRatio: '4/5', borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
-                <Image src="/creator.webp" alt="Aiko Mori" fill style={{ objectFit: 'cover' }} />
+                <Image src="/creator.webp" alt="Aiko" fill style={{ objectFit: 'cover' }} />
               </div>
             </div>
             <div className="instructor-text">
-              <h2>My name is Aiko Mori.</h2>
+              <h2>My name is Aiko.</h2>
               <p><strong>15+ years practicing and teaching mandala art.</strong> From traditional Tibetan mandalas to modern geometric designs. From pocket-sized pieces to large canvas works and full gallery commissions.<br /><br />Over <strong>300 original mandalas</strong> drawn. Taught <strong>500+ students</strong> in workshops across three countries to draw their first mandala from scratch.</p>
               <p>I picked up mandala drawing feeling burned out and creatively empty. Within a week I was drawing circles on every scrap of paper in my house. <strong>That obsession never left.</strong> I just learned to channel it.</p>
             </div>
