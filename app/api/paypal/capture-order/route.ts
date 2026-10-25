@@ -5,7 +5,7 @@ import { createHash } from 'crypto';
 import OrderConfirmation from '../../../../emails/OrderConfirmation';
 import { recordPurchase } from '../../../../lib/airtable';
 import { PROOF_SITE, redactLinks, sendProof, type ProofEvent } from '../../../../lib/proof';
-import { PAYPAL_API, PAYPAL_DIRECT, PAYPAL_PRODUCT, paypalAccessToken } from '../../../../lib/paypal-direct';
+import { PAYPAL_API, PAYPAL_DIRECT, PAYPAL_PRODUCT, paypalAccessToken, reportPaypalDirectSale } from '../../../../lib/paypal-direct';
 
 // Direct PayPal (lib/paypal-direct.ts): captures the PayPal order, then fulfils it the way
 // the Stripe webhook fulfils a card sale: course access (incl. the pack) for the typed AND
@@ -206,6 +206,8 @@ export async function POST(request: Request) {
             notFiscalized: true,
           });
         }
+        // Daily limit: count today's PayPal sales now that this one is in Airtable.
+        await reportPaypalDirectSale();
 
         const capiToken = process.env.META_CAPI_ACCESS_TOKEN;
         if (capiToken) {

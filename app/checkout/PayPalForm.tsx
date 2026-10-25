@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 // PayPal runs on its OWN rails here, not through Stripe: PayPal's JS SDK button
@@ -37,6 +37,18 @@ export default function PayPalForm({
   // PayPal fires onError after actions.reject(), which would otherwise show a
   // scary "something went wrong" on top of the email validation message.
   const rejectedForEmail = useRef(false);
+  // Daily PayPal limit: hidden until the site confirms PayPal is open today.
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    let live = true;
+    fetch('/api/paypal/status')
+      .then((r) => r.json())
+      .then((d: { open?: boolean }) => { if (live) setOpen(d.open === true); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, []);
+
+  if (!open) return null;
 
   if (!resolvedClientId) {
     return (

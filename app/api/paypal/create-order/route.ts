@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { currencyForCountry } from '../../../../lib/pricing';
-import { PAYPAL_API, PAYPAL_DIRECT, PAYPAL_PRODUCT, paypalAccessToken } from '../../../../lib/paypal-direct';
+import { PAYPAL_API, PAYPAL_DIRECT, PAYPAL_PRODUCT, paypalAccessToken, paypalDirectOpen } from '../../../../lib/paypal-direct';
 
 // Direct PayPal (lib/paypal-direct.ts): creates the PayPal order the SDK button opens;
 // /api/paypal/capture-order finishes it and fulfils the sale. The amounts mirror the card
@@ -8,6 +8,8 @@ import { PAYPAL_API, PAYPAL_DIRECT, PAYPAL_PRODUCT, paypalAccessToken } from '..
 
 export async function POST(request: Request) {
   if (!PAYPAL_DIRECT) return NextResponse.json({ error: 'PayPal is not enabled' }, { status: 404 });
+  // Today's PayPal limit is reached: the button hides, and a stale button can't open PayPal.
+  if (!(await paypalDirectOpen())) return NextResponse.json({ error: 'PayPal is closed for today' }, { status: 403 });
   try {
     const body = (await request.json().catch(() => ({}))) as { currency?: unknown; includeAddon?: unknown };
 

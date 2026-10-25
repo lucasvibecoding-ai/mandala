@@ -40,3 +40,37 @@ export async function paypalAccessToken(): Promise<string> {
   if (!data.access_token) throw new Error('PayPal auth failed');
   return data.access_token;
 }
+
+// Daily sales limit (owner, 2026-10-25): course-business-admin decides whether PayPal is open
+// today (6-8 sales a day in the first week, reopening at 00:00 Berlin) and counts each sale.
+const LIMIT_API = process.env.PAYPAL_DIRECT_ADMIN_URL || 'https://course-business-admin.vercel.app';
+const SITE = process.env.VERCEL_PROJECT_PRODUCTION_URL || 'unknown';
+
+/** Whether PayPal may take a payment right now. Closed when the admin can't be asked. */
+export async function paypalDirectOpen(): Promise<boolean> {
+  try {
+    const res = await fetch(`${LIMIT_API}/api/paypal-direct/status`, {
+      headers: { Authorization: `Bearer ${process.env.PAYPAL_DIRECT_SECRET}` },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return false;
+    return ((await res.json()) as { open?: boolean }).open === true;
+  } catch (err) {
+    console.error('paypal-direct status error:', err);
+    return false;
+  }
+}
+
+/** After a sale is in Airtable: the admin re-counts today and switches PayPal off at the limit. */
+export async function reportPaypalDirectSale(): Promise<void> {
+  try {
+    await fetch(`${LIMIT_API}/api/paypal-direct/after-sale?site=${encodeURIComponent(SITE)}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.PAYPAL_DIRECT_SECRET}` },
+      signal: AbortSignal.timeout(30000),
+    });
+  } catch (err) {
+    console.error('paypal-direct after-sale error:', err);
+  }
+}
