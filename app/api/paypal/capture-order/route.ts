@@ -102,7 +102,9 @@ export async function POST(request: Request) {
     const capture = unit?.payments?.captures?.[0];
     const amount = capture?.amount?.value ? Number(capture.amount.value) : Number(PAYPAL_PRODUCT.price);
     const currency = (capture?.amount?.currency_code || 'USD') as string;
-    const addonSlug = typeof unit?.custom_id === 'string' && unit.custom_id.startsWith('addon:') ? unit.custom_id.slice(6) : null;
+    // The capture response carries custom_id on the capture itself, not on the purchase unit.
+    const customId: unknown = capture?.custom_id ?? unit?.custom_id;
+    const addonSlug = typeof customId === 'string' && customId.startsWith('addon:') ? customId.slice(6) : null;
     const paidAt = capture?.create_time ? new Date(capture.create_time) : new Date();
 
     // Answer the browser now (it goes to /success); fulfil in the background.
