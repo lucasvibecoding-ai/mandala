@@ -490,37 +490,37 @@ export default function CheckoutClient() {
         .next-steps {
           margin-top: 168px;
           background: #ffffff;
-          border-radius: 12px;
+          border-radius: 11px;
           overflow: hidden;
           color: #0A2540;
         }
 
         .next-steps-body {
-          padding: 18px 20px;
+          padding: 15px 17px;
         }
 
         .next-steps-title {
-          font-size: 15px;
+          font-size: 14px;
           font-weight: 700;
-          margin-bottom: 12px;
+          margin-bottom: 10px;
         }
 
         .next-step {
           display: flex;
           align-items: center;
-          gap: 10px;
-          font-size: 15px;
+          gap: 9px;
+          font-size: 14px;
           line-height: 1.35;
         }
 
         .next-step + .next-step {
-          margin-top: 10px;
+          margin-top: 8px;
         }
 
         .next-step-check {
           flex: none;
-          width: 22px;
-          height: 22px;
+          width: 20px;
+          height: 20px;
           border-radius: 50%;
           background: #16a34a;
           color: #ffffff;
@@ -529,13 +529,18 @@ export default function CheckoutClient() {
           justify-content: center;
         }
 
+        .next-step-check svg {
+          width: 11px;
+          height: 11px;
+        }
+
         .next-steps-spam {
           background: #fde68a;
           color: #78350f;
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 700;
           letter-spacing: 0.02em;
-          padding: 10px 12px;
+          padding: 8px 11px;
           text-align: center;
         }
 
@@ -563,20 +568,6 @@ export default function CheckoutClient() {
 
           .checkout-form-panel {
             padding: 36px 28px;
-          }
-
-          .next-steps-body {
-            padding: 16px 14px;
-          }
-
-          .next-step {
-            font-size: 13px;
-            gap: 8px;
-          }
-
-          .next-steps-spam {
-            font-size: 10px;
-            padding: 9px 8px;
           }
         }
 
@@ -758,7 +749,7 @@ export default function CheckoutClient() {
                   <span className="next-step-check">
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg>
                   </span>
-                  Instant access on the next screen
+                  Instant access after payment
                 </div>
                 <div className="next-step">
                   <span className="next-step-check">
