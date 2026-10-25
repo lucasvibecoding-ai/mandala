@@ -8,6 +8,9 @@ import WalletExpress from './WalletExpress';
 import PayPalExpress from './PayPalExpress';
 import CardForm from './CardForm';
 import PayPalRedirectButton from './PayPalRedirectButton';
+import PayPalForm from './PayPalForm';
+// Direct PayPal switch (lib/paypal-direct.ts); read here so the server-only PayPal code stays out of the browser.
+const PAYPAL_DIRECT = process.env.NEXT_PUBLIC_PAYPAL_DIRECT === '1';
 import MobileCardForm from './MobileCardForm';
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
@@ -830,7 +833,19 @@ export default function CheckoutClient() {
                         </Elements>
 
                         <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-                          {!paypalDown && (
+                          {PAYPAL_DIRECT ? (
+                            /* Direct PayPal (lib/paypal-direct.ts): PayPal's own gold button, same spot. */
+                            <div style={{ marginTop: 12 }}>
+                              <PayPalForm
+                                email={email}
+                                emailValid={emailValid}
+                                currency={currency}
+                                includeAddon={bumpSelected}
+                                onEmailError={showExpressEmailError}
+                                onError={setExpressError}
+                              />
+                            </div>
+                          ) : !paypalDown && (
                           <div style={{ marginTop: 12 }}>
                             <PayPalRedirectButton
                               email={email}
@@ -873,7 +888,19 @@ export default function CheckoutClient() {
                         </Elements>
 
                         <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-                          {!paypalDown && (
+                          {PAYPAL_DIRECT ? (
+                            /* Direct PayPal (lib/paypal-direct.ts): PayPal's own gold button, same spot. */
+                            <div style={{ marginTop: 12 }}>
+                              <PayPalForm
+                                email={email}
+                                emailValid={emailValid}
+                                currency={currency}
+                                includeAddon={bumpSelected}
+                                onEmailError={showExpressEmailError}
+                                onError={setExpressError}
+                              />
+                            </div>
+                          ) : !paypalDown && (
                           <div style={{ marginTop: 12 }}>
                             <PayPalExpress
                               emailValid={emailValid}

@@ -102,6 +102,12 @@ interface RecordPurchaseInput {
   buyerCountry?: string | null;
   /** The buyer's other address when checkout and PayPal disagree (see below). */
   secondEmail?: string | null;
+  /**
+   * Direct PayPal (lib/paypal-direct.ts): a sale by a DIFFERENT seller than LH, so it is
+   * never fiscalized and carries no LH VAT. Writes Fiscalized = "No" at creation (which also
+   * keeps it out of the fiscalization queue view, "Fiscalized is empty") and no VAT Rate.
+   */
+  notFiscalized?: boolean;
 }
 
 export async function recordPurchase(input: RecordPurchaseInput): Promise<void> {
@@ -131,7 +137,8 @@ export async function recordPurchase(input: RecordPurchaseInput): Promise<void> 
       // Country + the VAT rate already included in Amount, so the revenue tables can show
       // money net of VAT. Left blank when no country resolved, and 0 before the VAT era —
       // a blank rate means "no VAT", which is every sale before 2026-09-22.
-      ...(input.buyerCountry
+      ...(input.notFiscalized ? { Fiscalized: 'No' } : {}),
+      ...(input.buyerCountry && !input.notFiscalized
         ? {
             'Buyer Country': input.buyerCountry,
             'VAT Rate': vatTreatment(input.buyerCountry).rate,
