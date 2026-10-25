@@ -484,6 +484,58 @@ export default function CheckoutClient() {
           min-height: 180px;
         }
 
+        .next-steps {
+          margin-top: 168px;
+          background: #ffffff;
+          border-radius: 12px;
+          overflow: hidden;
+          color: #0A2540;
+        }
+
+        .next-steps-body {
+          padding: 18px 20px;
+        }
+
+        .next-steps-title {
+          font-size: 15px;
+          font-weight: 700;
+          margin-bottom: 12px;
+        }
+
+        .next-step {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 15px;
+          line-height: 1.35;
+        }
+
+        .next-step + .next-step {
+          margin-top: 10px;
+        }
+
+        .next-step-check {
+          flex: none;
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: #16a34a;
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .next-steps-spam {
+          background: #fde68a;
+          color: #78350f;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          padding: 10px 12px;
+          text-align: center;
+        }
+
         .checkout-form-panel .secure-footer {
           display: flex;
           align-items: center;
@@ -508,6 +560,20 @@ export default function CheckoutClient() {
 
           .checkout-form-panel {
             padding: 36px 28px;
+          }
+
+          .next-steps-body {
+            padding: 16px 14px;
+          }
+
+          .next-step {
+            font-size: 13px;
+            gap: 8px;
+          }
+
+          .next-steps-spam {
+            font-size: 10px;
+            padding: 9px 8px;
           }
         }
 
@@ -547,6 +613,45 @@ export default function CheckoutClient() {
             gap: 8px;
             font-size: 12px;
             color: rgba(245,240,232,0.5);
+          }
+
+          .next-steps {
+            margin-top: 28px;
+            border-radius: 8px;
+          }
+
+          .next-steps-body {
+            padding: 10px 12px;
+          }
+
+          .next-steps-title {
+            font-size: 11px;
+            margin-bottom: 6px;
+          }
+
+          .next-step {
+            font-size: 11px;
+            gap: 7px;
+          }
+
+          .next-step + .next-step {
+            margin-top: 5px;
+          }
+
+          .next-step-check {
+            width: 15px;
+            height: 15px;
+          }
+
+          .next-step-check svg {
+            width: 9px;
+            height: 9px;
+          }
+
+          .next-steps-spam {
+            font-size: 9px;
+            letter-spacing: 0.01em;
+            padding: 6px 8px;
           }
 
           .checkout-form-panel {
@@ -641,6 +746,25 @@ export default function CheckoutClient() {
             <div className="total-row">
               <span className="total-label">Total due today</span>
               <span className="total-amount">{totalFormatted}</span>
+            </div>
+
+            <div className="next-steps">
+              <div className="next-steps-body">
+                <div className="next-steps-title">What happens next:</div>
+                <div className="next-step">
+                  <span className="next-step-check">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg>
+                  </span>
+                  Instant access on the next screen
+                </div>
+                <div className="next-step">
+                  <span className="next-step-check">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 6.2l2.3 2.3 4.7-4.9"/></svg>
+                  </span>
+                  Email with your invite link
+                </div>
+              </div>
+              <div className="next-steps-spam">DON&apos;T FORGET TO CHECK YOUR SPAM FOLDER</div>
             </div>
 
           </div>
