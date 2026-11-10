@@ -230,6 +230,22 @@ export default function CheckoutClient() {
           margin-bottom: 32px;
         }
 
+        .checkout-summary .social-proof {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          margin: -18px 0 26px;
+          padding: 6px 12px;
+          border-radius: 14px;
+          background: rgba(232,213,160,0.14);
+          color: #e8d5a0;
+          font-size: 13px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+
+        .checkout-summary .social-proof svg { flex-shrink: 0; }
+
         .checkout-summary .product-price .currency {
           font-size: 20px;
           font-weight: 500;
@@ -665,6 +681,12 @@ export default function CheckoutClient() {
             margin-bottom: 8px;
           }
 
+          .checkout-summary .social-proof {
+            margin: 2px 0 10px;
+            padding: 5px 12px;
+            font-size: 13px;
+          }
+
           .checkout-mobile-info {
             display: flex !important;
             justify-content: center;
@@ -760,6 +782,12 @@ export default function CheckoutClient() {
             <div className="product-title">Mandala Masterclass</div>
             <div className="product-price">
               {fmt(BASE_PRICE)}<span className="currency">{code}</span>
+            </div>
+            {/* Social proof (owner 2026-11-10): counts buyers across ALL of Aiko's courses
+                (Airtable: 4,288 paid buyers), never this one course. */}
+            <div className="social-proof">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Join 4,000+ students learning with Aiko
             </div>
             <div className="checkout-desktop-info" style={{ fontSize: 13, color: 'rgba(245,240,232,0.5)', lineHeight: 1.8, marginBottom: 32 }}>
               Lifetime Access &middot; One-Time Payment<br />90-Day Money-Back Guarantee
