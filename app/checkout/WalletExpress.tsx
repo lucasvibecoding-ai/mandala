@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import {
   ExpressCheckoutElement,
   useStripe,
@@ -14,14 +15,23 @@ export default function WalletExpress({
   onEmailError,
   ensurePIAmountSynced,
   onError,
+  syncVersion = 0,
 }: {
   emailValid: boolean;
   onEmailError: () => void;
   ensurePIAmountSynced?: () => Promise<void>;
   onError: (msg: string) => void;
+  /** Bumped by the checkout each time the PaymentIntent amount changes on the server. */
+  syncVersion?: number;
 }) {
   const stripe = useStripe();
   const elements = useElements();
+
+  // Ticking an extra changes the PaymentIntent amount on the server; pull it in so the
+  // Apple Pay / Google Pay / PayPal sheet shows the same total the buyer is charged.
+  useEffect(() => {
+    if (syncVersion > 0) elements?.fetchUpdates().catch(() => {});
+  }, [elements, syncVersion]);
 
   const onConfirm = async () => {
     if (!stripe || !elements) return;
