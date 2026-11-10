@@ -22,6 +22,8 @@ interface OrderConfirmationProps {
   // Public URL to the fiscalized e-računi invoice (view + download PDF).
   // Omitted if the invoice was not ready within the send window.
   invoiceUrl?: string;
+  // Name of the second course bought as the checkout upsell; it sits in the same account.
+  extraCourseName?: string;
 }
 
 export default function OrderConfirmation({
@@ -29,6 +31,7 @@ export default function OrderConfirmation({
   setupUrl,
   loginUrl,
   invoiceUrl,
+  extraCourseName,
 }: OrderConfirmationProps) {
   const accessUrl = setupUrl ?? loginUrl;
   const isNewUser = !!setupUrl;
@@ -47,6 +50,12 @@ export default function OrderConfirmation({
           <Text style={text}>
             Thank you so much for your purchase, it genuinely means a lot. Your mandala course is ready and waiting for you.
           </Text>
+
+          {extraCourseName && (
+            <Text style={text}>
+              Your second course, the <strong>{extraCourseName}</strong>, is in the same account. Log in once and you&apos;ll find both courses waiting for you.
+            </Text>
+          )}
 
           {accessUrl ? (
             <>

@@ -19,6 +19,7 @@ export default function PayPalForm({
   emailValid,
   currency,
   includeAddon = false,
+  includeCourse = false,
   onEmailError,
   onError,
 }: {
@@ -30,6 +31,7 @@ export default function PayPalForm({
   currency: string;
   /** The order-bump box: the pack is added to the PayPal order too. */
   includeAddon?: boolean;
+  includeCourse?: boolean;
   onEmailError: () => void;
   onError: (message: string) => void;
 }) {
@@ -94,7 +96,7 @@ export default function PayPalForm({
             // Send the currency the SDK actually loaded with. It is the source of
             // truth: an order in a different currency than the SDK context is
             // rejected by PayPal.
-            body: JSON.stringify({ email, currency: currency.toUpperCase(), includeAddon }),
+            body: JSON.stringify({ email, currency: currency.toUpperCase(), includeAddon, includeCourse }),
           });
           const data = await res.json();
           if (!data.id) throw new Error('No PayPal order id');

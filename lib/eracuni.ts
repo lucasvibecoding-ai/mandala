@@ -19,11 +19,15 @@ export type FiscalInvoiceInput = {
   amount: number; // total the buyer actually paid
   currency: string; // e.g. 'EUR'
   methodOfPayment: 'Stripe' | 'PayPal';
-  includeAddon?: boolean; // buyer added the order bump -> append the addon product line
+  includeAddon?: boolean; // buyer added the pack -> append the pack line
+  includeCourse?: boolean; // buyer added the upsell course -> append the course line (both = bundle line)
   buyerCountry?: string | null; // ISO-2, decides the vrsta prodaje (see lib/vat-country.ts)
 };
 
 export type FiscalInvoiceResult = { publicUrl: string; documentId?: string };
+
+// e-računi item codes of the checkout extras: pack 19.99, upsell course 29.99, both 34.99.
+const EXTRA_ITEM_CODES = { pack: 'ADDON-PACK', course: 'ADDON-COURSE', bundle: 'BUNDLE' } as const;
 
 // e-računi field names for the cross-border VAT fields, from the SalesInvoice / SalesQuote
 // API docs (e-racuni.com/Croatian/p-1001761 and WS+API+SalesQuote). `vatTransactionType` on a
@@ -88,7 +92,16 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
   const rawLanguage = process.env.E_RACUNI_LANGUAGE ?? 'English';
   const documentLanguage = LANGUAGE_NAMES[rawLanguage.toLowerCase()] ?? rawLanguage;
   const productCode = process.env.E_RACUNI_PRODUCT_CODE;
-  const addonProductCode = process.env.E_RACUNI_ADDON_PRODUCT_CODE;
+  // The checkout extras are three items shared by every site (owner 2026-11-10), each priced in
+  // e-računi itself: the pack, the upsell course, and both together at the bundle price.
+  const extraProductCode =
+    input.includeAddon && input.includeCourse
+      ? EXTRA_ITEM_CODES.bundle
+      : input.includeAddon
+        ? EXTRA_ITEM_CODES.pack
+        : input.includeCourse
+          ? EXTRA_ITEM_CODES.course
+          : null;
 
   // Buyer country -> vrsta prodaje + rate. Before VAT_START this yields vrsta null and the
   // payload stays exactly as it was, so a deploy can land before the e-računi org is flipped.
@@ -106,9 +119,7 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
   const items = productCode
     ? [
         { productCode, quantity: 1, ...lineVat },
-        ...(input.includeAddon && addonProductCode
-          ? [{ productCode: addonProductCode, quantity: 1, ...lineVat }]
-          : []),
+        ...(extraProductCode ? [{ productCode: extraProductCode, quantity: 1, ...lineVat }] : []),
       ]
     : [
         {

@@ -1,25 +1,24 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { COURSE_PRICE_CENTS, currencyForCountry } from '../../../lib/pricing';
+import { COURSE_PRICE_CENTS, UPSELL_COURSE_SLUG, currencyForCountry, extrasCents } from '../../../lib/pricing';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-02-25.clover',
 });
 
-// Cents to add to the base price when the buyer accepts the order bump.
-const BUMP_AMOUNT_CENTS = 1700;
-
 export async function POST(request: Request) {
   try {
     const body = (await request.json().catch(() => ({}))) as {
       includeBump?: boolean;
+      includeCourse?: boolean;
     };
     const includeBump = body.includeBump === true;
+    const includeCourse = body.includeCourse === true;
 
     const productId = process.env.STRIPE_PRODUCT_ID!;
 
     const product = await stripe.products.retrieve(productId);
-    const amount = COURSE_PRICE_CENTS + (includeBump ? BUMP_AMOUNT_CENTS : 0);
+    const amount = COURSE_PRICE_CENTS + extrasCents(includeBump, includeCourse);
 
     const metadata: Record<string, string> = {
       product_id: product.id,
@@ -27,6 +26,9 @@ export async function POST(request: Request) {
     };
     if (includeBump) {
       metadata.includes_addon = 'mandala-pack';
+    }
+    if (includeCourse) {
+      metadata.includes_course = UPSELL_COURSE_SLUG;
     }
     // Buyer location for the VAT counter. Additive metadata only; absent in local dev.
     // update-payment-intent spreads existing metadata, so these survive an order-bump toggle.

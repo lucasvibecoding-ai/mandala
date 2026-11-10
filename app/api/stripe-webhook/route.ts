@@ -8,6 +8,7 @@ import { PROOF_SITE, redactLinks, sendProof, type ProofEvent } from '../../../li
 import { recordPurchase } from '../../../lib/airtable';
 import { createFiscalInvoiceWithin } from '../../../lib/eracuni';
 import { resolveBuyerCountry } from '../../../lib/vat-country';
+import { UPSELL_COURSE_NAME } from '../../../lib/pricing';
 
 // Allow the background fulfillment (below) to run up to 60s — the Vercel Hobby cap.
 export const maxDuration = 60;
@@ -33,6 +34,7 @@ async function grantCourseAccess(
   addonSlug: string | null,
   suppressReminders = false,
   proof?: { orderId: string; role: string },
+  courseSlug = 'mandala-masterclass',
 ): Promise<{ setupUrl?: string; loginUrl?: string }> {
   if (!process.env.COURSE_PLATFORM_URL || !process.env.COURSE_PLATFORM_SECRET || !email) {
     return {};
@@ -51,7 +53,7 @@ async function grantCourseAccess(
       },
       body: JSON.stringify({
         email,
-        courseSlug: 'mandala-masterclass',
+        courseSlug,
         // Proof of delivery: ties this grant and its logged link to the order.
         ...(proof ? { orderId: proof.orderId, site: PROOF_SITE, role: proof.role, via: 'email' } : {}),
         ...(addonSlug ? { addonSlug } : {}),
@@ -198,8 +200,13 @@ export async function POST(request: Request) {
         const firstName = customerName?.split(' ')[0];
 
         const addonSlug =
-          typeof paymentIntent.metadata?.includes_addon === 'string'
+          typeof paymentIntent.metadata?.includes_addon === 'string' && paymentIntent.metadata.includes_addon
             ? paymentIntent.metadata.includes_addon
+            : null;
+        // The second course bought as the checkout upsell (platform slug), or null.
+        const upsellSlug =
+          typeof paymentIntent.metadata?.includes_course === 'string' && paymentIntent.metadata.includes_course
+            ? paymentIntent.metadata.includes_course
             : null;
 
         // Grant access and create the fiscal invoice in parallel. The invoice call retries
@@ -228,11 +235,18 @@ export async function POST(request: Request) {
         const proofFor = (email: string | null) => ({ orderId: paymentIntent.id, role: roleOf(email) });
         const proofEmails: ProofEvent[] = [];
 
+        // Main course first, then the upsell course on the same address: one platform account,
+        // and its pending enrollment converts together with the main one at sign-up. The
+        // activation reminders stay with the main course only.
+        const grantAll = async (email: string | null, suppressReminders: boolean) => {
+          const main = await grantCourseAccess(email, addonSlug, suppressReminders, proofFor(email));
+          if (upsellSlug) await grantCourseAccess(email, null, true, proofFor(email), upsellSlug);
+          return main;
+        };
+
         const [access, secondaryAccess, invoice] = await Promise.all([
-          grantCourseAccess(primaryEmail, addonSlug, false, proofFor(primaryEmail)),
-          secondaryEmail
-            ? grantCourseAccess(secondaryEmail, addonSlug, true, proofFor(secondaryEmail))
-            : Promise.resolve(null),
+          grantAll(primaryEmail, false),
+          secondaryEmail ? grantAll(secondaryEmail, true) : Promise.resolve(null),
           createFiscalInvoiceWithin(
             {
               apiTransactionId: paymentIntent.id,
@@ -243,6 +257,7 @@ export async function POST(request: Request) {
               currency: (paymentIntent.currency || 'eur').toUpperCase(),
               methodOfPayment: 'Stripe',
               includeAddon: !!addonSlug,
+              includeCourse: !!upsellSlug,
               buyerCountry,
             },
             INVOICE_DEADLINE_MS,
@@ -274,6 +289,7 @@ export async function POST(request: Request) {
                 setupUrl: recipient.access.setupUrl,
                 loginUrl: recipient.access.loginUrl,
                 invoiceUrl: invoiceForThisRecipient,
+                extraCourseName: upsellSlug ? UPSELL_COURSE_NAME : undefined,
               }),
             );
             const subject = 'Your Mandala Course is ready!';
@@ -355,6 +371,7 @@ export async function POST(request: Request) {
               payerName: customerName,
               product: 'Mandala Masterclass',
               addon: addonSlug ?? null,
+              upsellCourse: upsellSlug,
               chargeId: stripeProof?.chargeId ?? null,
               receiptUrl: stripeProof?.receiptUrl ?? null,
             },

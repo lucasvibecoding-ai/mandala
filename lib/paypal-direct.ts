@@ -21,9 +21,14 @@ export const PAYPAL_PRODUCT = {
   /** What the buyer sees on PayPal's approval page and receipt (owner, 2026-10-25). */
   name: 'Online Art Learning Platform Access: Mandala Drawing',
   addonName: 'Online Art Learning Platform Access: Mandala Drawing Pack',
-  /** Same numbers as the card checkout: $49.99 / €49.99 by buyer IP, the pack +$17 / +€17. */
+  /** Same numbers as the card checkout: $49.99 / €49.99 by buyer IP, the pack +19.99, the upsell
+   *  course +29.99, both together +34.99 (lib/pricing.ts). */
   price: '49.99',
-  addonPrice: '17.00',
+  addonPrice: '19.99',
+  upsellName: 'Online Art Learning Platform Access: Japanese Doodle Masterclass',
+  upsellPrice: '29.99',
+  bundleName: 'Online Art Learning Platform Access: Mandala Drawing Pack + Japanese Doodle Masterclass',
+  bundlePrice: '34.99',
 };
 
 export async function paypalAccessToken(): Promise<string> {

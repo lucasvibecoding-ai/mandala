@@ -6,6 +6,7 @@ import OrderConfirmation from '../../../../emails/OrderConfirmation';
 import { recordPurchase } from '../../../../lib/airtable';
 import { PROOF_SITE, redactLinks, sendProof, type ProofEvent } from '../../../../lib/proof';
 import { PAYPAL_API, PAYPAL_DIRECT, PAYPAL_PRODUCT, paypalAccessToken, reportPaypalDirectSale } from '../../../../lib/paypal-direct';
+import { UPSELL_COURSE_NAME, UPSELL_COURSE_SLUG } from '../../../../lib/pricing';
 
 // Direct PayPal (lib/paypal-direct.ts): captures the PayPal order, then fulfils it the way
 // the Stripe webhook fulfils a card sale: course access (incl. the pack) for the typed AND
@@ -29,6 +30,7 @@ async function grantCourseAccess(
   addonSlug: string | null,
   suppressReminders: boolean,
   proof: { orderId: string; role: string },
+  courseSlug: string = COURSE,
 ): Promise<{ setupUrl?: string; loginUrl?: string }> {
   if (!process.env.COURSE_PLATFORM_URL || !process.env.COURSE_PLATFORM_SECRET || !email) return {};
   const loginUrl = `${process.env.COURSE_PLATFORM_URL}/sign-in`;
@@ -38,7 +40,7 @@ async function grantCourseAccess(
       headers: { Authorization: `Bearer ${process.env.COURSE_PLATFORM_SECRET}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email,
-        courseSlug: COURSE,
+        courseSlug,
         orderId: proof.orderId,
         site: PROOF_SITE,
         role: proof.role,
@@ -104,17 +106,31 @@ export async function POST(request: Request) {
     const currency = (capture?.amount?.currency_code || 'USD') as string;
     // The capture response carries custom_id on the capture itself, not on the purchase unit.
     const customId: unknown = capture?.custom_id ?? unit?.custom_id;
-    const addonSlug = typeof customId === 'string' && customId.startsWith('addon:') ? customId.slice(6) : null;
+    // 'extras:pack', 'extras:course' or 'extras:pack+course' (create-order); 'addon:<slug>' on
+    // orders created before the upsell existed.
+    const extras = typeof customId === 'string' && customId.startsWith('extras:') ? customId.slice(7).split('+') : [];
+    const addonSlug =
+      typeof customId === 'string' && customId.startsWith('addon:')
+        ? customId.slice(6)
+        : extras.includes('pack')
+          ? PAYPAL_PRODUCT.addonSlug
+          : null;
+    const upsellSlug = extras.includes('course') ? UPSELL_COURSE_SLUG : null;
     const paidAt = capture?.create_time ? new Date(capture.create_time) : new Date();
 
     // Answer the browser now (it goes to /success); fulfil in the background.
     after(async () => {
       try {
+        // Main course first, then the upsell course on the same address (same as the webhook).
+        const grantAll = async (email: string | null, suppressReminders: boolean) => {
+          const proof = { orderId: orderID, role: roleOf(email) };
+          const main = await grantCourseAccess(email, addonSlug, suppressReminders, proof);
+          if (upsellSlug) await grantCourseAccess(email, null, true, proof, upsellSlug);
+          return main;
+        };
         const [access, secondaryAccess] = await Promise.all([
-          grantCourseAccess(primaryEmail, addonSlug, false, { orderId: orderID, role: roleOf(primaryEmail) }),
-          secondaryEmail
-            ? grantCourseAccess(secondaryEmail, addonSlug, true, { orderId: orderID, role: roleOf(secondaryEmail) })
-            : Promise.resolve(null),
+          grantAll(primaryEmail, false),
+          secondaryEmail ? grantAll(secondaryEmail, true) : Promise.resolve(null),
         ]);
 
         const recipients = [
@@ -127,7 +143,12 @@ export async function POST(request: Request) {
           const subject = 'Your Mandala Course is ready!';
           try {
             const html = await render(
-              OrderConfirmation({ customerEmail: recipient.email, setupUrl: recipient.access.setupUrl, loginUrl: recipient.access.loginUrl }),
+              OrderConfirmation({
+                customerEmail: recipient.email,
+                setupUrl: recipient.access.setupUrl,
+                loginUrl: recipient.access.loginUrl,
+                extraCourseName: upsellSlug ? UPSELL_COURSE_NAME : undefined,
+              }),
             );
             const emailResult = await resend.emails.send({
               from: 'Aiko Mori <hello@mandalapractice.com>',
@@ -186,6 +207,7 @@ export async function POST(request: Request) {
               payerName: buyerName,
               product: PAYPAL_PRODUCT.name,
               addon: addonSlug,
+              upsellCourse: upsellSlug,
               captureId: capture?.id ?? null,
             },
           },

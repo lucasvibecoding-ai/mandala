@@ -9,6 +9,23 @@
 // Stripe product so the page, the checkout total and the actual charge can never disagree.
 export const COURSE_PRICE_CENTS = 4999;
 
+// Checkout extras (owner 2026-11-10): the printable pack, a second course, or both together at a
+// bundle price. Same numbers in USD and EUR, like the course price.
+export const PACK_CENTS = 1999;
+export const UPSELL_COURSE_CENTS = 2999;
+export const BUNDLE_CENTS = 3499;
+
+/** Cents added on top of the course for the ticked extras; both together cost the bundle price. */
+export function extrasCents(pack: boolean, course: boolean): number {
+  if (pack && course) return BUNDLE_CENTS;
+  return (pack ? PACK_CENTS : 0) + (course ? UPSELL_COURSE_CENTS : 0);
+}
+
+// The course offered as the checkout upsell: its course-platform slug (for the access grant) and
+// the name the buyer sees in the checkout and the confirmation email.
+export const UPSELL_COURSE_SLUG = 'japanese-doodling-masterclass';
+export const UPSELL_COURSE_NAME = 'Japanese Doodle Masterclass';
+
 export const USD_COUNTRIES = new Set([
   // North America + US territories
   'US', 'CA', 'MX', 'PR', 'VI', 'GU', 'AS', 'MP',

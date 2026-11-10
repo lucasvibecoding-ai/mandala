@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { COURSE_PRICE_CENTS } from '../../../lib/pricing';
+import { COURSE_PRICE_CENTS, UPSELL_COURSE_SLUG, extrasCents } from '../../../lib/pricing';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-02-25.clover',
 });
-
-const BUMP_AMOUNT_CENTS = 1700;
 
 // Toggles the order-bump on/off for an already-created PaymentIntent. Called
 // when the buyer ticks/unticks the bump checkbox on the checkout page so
@@ -17,10 +15,12 @@ export async function POST(request: Request) {
     const body = (await request.json().catch(() => ({}))) as {
       paymentIntentId?: string;
       includeBump?: boolean;
+      includeCourse?: boolean;
       email?: string;
     };
     const piId = body.paymentIntentId;
     const includeBump = body.includeBump === true;
+    const includeCourse = body.includeCourse === true;
     if (!piId) {
       return NextResponse.json(
         { error: 'Missing paymentIntentId' },
@@ -41,13 +41,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ amount: updated.amount });
     }
 
-    const amount = COURSE_PRICE_CENTS + (includeBump ? BUMP_AMOUNT_CENTS : 0);
+    const amount = COURSE_PRICE_CENTS + extrasCents(includeBump, includeCourse);
 
     // Stripe MERGES metadata on update — omitting a key does NOT remove it. A key is
     // only unset by posting an empty string, so untick must send includes_addon: ''.
     const updated = await stripe.paymentIntents.update(piId, {
       amount,
-      metadata: { includes_addon: includeBump ? 'mandala-pack' : '' },
+      metadata: {
+        includes_addon: includeBump ? 'mandala-pack' : '',
+        includes_course: includeCourse ? UPSELL_COURSE_SLUG : '',
+      },
     });
 
     return NextResponse.json({ amount: updated.amount });
