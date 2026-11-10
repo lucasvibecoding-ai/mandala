@@ -31,7 +31,7 @@ export async function POST(request: Request) {
               event_id: eventId,
               action_source: 'website',
               custom_data: {
-                value: 47.0,
+                value: 49.99,
                 currency: 'USD',
                 content_name: 'Mandala Masterclass',
                 content_category: 'Online Course',

@@ -1,10 +1,14 @@
 // Single source of truth for which currency a buyer is priced in, used by BOTH the landing
 // page (display) and create-payment-intent (the actual charge) so they can never drift.
 //
-// €47 and $47 are both amount 4700, so only the currency/symbol flips; the amount is unchanged.
+// €49.99 and $49.99 are both amount 4999, so only the currency/symbol flips; the amount is unchanged.
 // USD for the Americas + Australia + New Zealand + the dollar countries, and when the buyer's
 // location is unknown (IP lookup failed); EUR for everyone else (all of Europe, Africa, the
 // Middle East, Asia).
+// The course price in minor units, the same number in USD and EUR. It lives here rather than on the
+// Stripe product so the page, the checkout total and the actual charge can never disagree.
+export const COURSE_PRICE_CENTS = 4999;
+
 export const USD_COUNTRIES = new Set([
   // North America + US territories
   'US', 'CA', 'MX', 'PR', 'VI', 'GU', 'AS', 'MP',

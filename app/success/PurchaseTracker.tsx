@@ -30,7 +30,7 @@ export default function PurchaseTracker() {
 
     if (window.fbq) {
       window.fbq('track', 'Purchase', {
-        value: 47.00,
+        value: 49.99,
         currency: 'USD',
         content_name: 'Mandala Masterclass',
         content_type: 'product',

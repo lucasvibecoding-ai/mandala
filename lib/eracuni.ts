@@ -115,7 +115,7 @@ function buildSalesInvoice(input: FiscalInvoiceInput) {
           description: input.description,
           quantity: 1,
           // type "Retail" means `price` is the final price INCLUDING all taxes, so the buyer
-          // still pays exactly 47 and e-računi carves the VAT out of it (`netPrice` would be
+          // still pays exactly the listed price and e-računi carves the VAT out of it (`netPrice` would be
           // the other way round and would add tax on top).
           price: input.amount,
           unit: 'kom',

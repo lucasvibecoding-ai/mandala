@@ -21,8 +21,8 @@ export const PAYPAL_PRODUCT = {
   /** What the buyer sees on PayPal's approval page and receipt (owner, 2026-10-25). */
   name: 'Online Art Learning Platform Access: Mandala Drawing',
   addonName: 'Online Art Learning Platform Access: Mandala Drawing Pack',
-  /** Same numbers as the card checkout: $47 / €47 by buyer IP, the pack +$17 / +€17. */
-  price: '47.00',
+  /** Same numbers as the card checkout: $49.99 / €49.99 by buyer IP, the pack +$17 / +€17. */
+  price: '49.99',
   addonPrice: '17.00',
 };
 

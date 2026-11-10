@@ -4,7 +4,7 @@ import { PAYPAL_API, PAYPAL_DIRECT, PAYPAL_PRODUCT, paypalAccessToken, paypalDir
 
 // Direct PayPal (lib/paypal-direct.ts): creates the PayPal order the SDK button opens;
 // /api/paypal/capture-order finishes it and fulfils the sale. The amounts mirror the card
-// checkout: the course at $47 / €47 by buyer IP, plus the pack when its box is ticked.
+// checkout: the course at $49.99 / €49.99 by buyer IP, plus the pack when its box is ticked.
 
 export async function POST(request: Request) {
   if (!PAYPAL_DIRECT) return NextResponse.json({ error: 'PayPal is not enabled' }, { status: 404 });
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json().catch(() => ({}))) as { currency?: unknown; includeAddon?: unknown };
 
-    // €47 / $47 by buyer IP (lib/pricing.ts), the same rule the Stripe charge uses. PayPal
+    // €49.99 / $49.99 by buyer IP (lib/pricing.ts), the same rule the Stripe charge uses. PayPal
     // rejects an order whose currency differs from the SDK context, so the button's
     // currency is honoured only when it agrees.
     const locked = currencyForCountry(request.headers.get('x-vercel-ip-country')).toUpperCase();

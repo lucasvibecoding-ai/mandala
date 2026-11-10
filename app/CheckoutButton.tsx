@@ -16,7 +16,7 @@ export default function CheckoutButton() {
 
     if (window.fbq) {
       window.fbq('track', 'InitiateCheckout', {
-        value: 47.00,
+        value: 49.99,
         currency: 'USD',
         content_name: 'Mandala Masterclass',
         content_category: 'Online Course',

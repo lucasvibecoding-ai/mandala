@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { COURSE_PRICE_CENTS } from '../../../lib/pricing';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-02-25.clover',
@@ -40,12 +41,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ amount: updated.amount });
     }
 
-    const productId = process.env.STRIPE_PRODUCT_ID!;
-    const product = await stripe.products.retrieve(productId, {
-      expand: ['default_price'],
-    });
-    const price = product.default_price as Stripe.Price;
-    const amount = (price.unit_amount ?? 0) + (includeBump ? BUMP_AMOUNT_CENTS : 0);
+    const amount = COURSE_PRICE_CENTS + (includeBump ? BUMP_AMOUNT_CENTS : 0);
 
     // Stripe MERGES metadata on update — omitting a key does NOT remove it. A key is
     // only unset by posting an empty string, so untick must send includes_addon: ''.

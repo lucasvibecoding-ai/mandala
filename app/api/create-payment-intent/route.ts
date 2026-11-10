@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { currencyForCountry } from '../../../lib/pricing';
+import { COURSE_PRICE_CENTS, currencyForCountry } from '../../../lib/pricing';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-02-25.clover',
@@ -18,12 +18,8 @@ export async function POST(request: Request) {
 
     const productId = process.env.STRIPE_PRODUCT_ID!;
 
-    const product = await stripe.products.retrieve(
-      productId,
-      { expand: ['default_price'] }
-    );
-    const price = product.default_price as Stripe.Price;
-    const amount = (price.unit_amount ?? 0) + (includeBump ? BUMP_AMOUNT_CENTS : 0);
+    const product = await stripe.products.retrieve(productId);
+    const amount = COURSE_PRICE_CENTS + (includeBump ? BUMP_AMOUNT_CENTS : 0);
 
     const metadata: Record<string, string> = {
       product_id: product.id,
