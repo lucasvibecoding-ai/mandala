@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Lora, Outfit } from "next/font/google";
 import "./globals.compiled.css";
+import ImageGuard from "./ImageGuard";
 
 const lora = Lora({
   variable: "--font-lora",
@@ -74,7 +75,10 @@ export default function RootLayout({
           />
         </noscript>
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <ImageGuard />
+        {children}
+      </body>
     </html>
   );
 }

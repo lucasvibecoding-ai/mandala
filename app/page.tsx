@@ -1,3 +1,4 @@
+import Reviews from './Reviews';
 import type { Metadata } from "next";
 import Image from "next/image";
 import CheckoutButton from "./CheckoutButton";
@@ -112,6 +113,8 @@ export default async function Home() {
         /* CTA */
         .cta-block { text-align: center; padding: 56px 0; }
         .price-old { font-size: 34px; color: var(--ink-muted); text-decoration: line-through; margin-bottom: 4px; }
+        /* "A $97 value" (owner 2026-11-10): a value line, not a struck former price (EU rule). */
+        .price-old.price-value { text-decoration: none; font-size: 24px; font-weight: 600; letter-spacing: .01em; }
         .price { font-size: 56px; color: var(--indigo-deep); margin-bottom: 4px; font-weight: 700; }
         .price-note { font-size: 20px; color: var(--ink-muted); margin-bottom: 24px; font-weight: 400; }
         .lifetime-break { display: none; }
@@ -506,18 +509,20 @@ export default async function Home() {
           </section>
 
 
+          {/* REVIEWS (placeholder) */}
+          <Reviews />
+
           {/* CTA after modules */}
           <section style={{ padding: '56px 0' }}>
             <div className="bonsai-center" style={{ marginBottom: 32 }}>
               <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>You&apos;ve seen what&apos;s inside. Five modules. A complete system for learning, creating, and mastering mandala art at home.</p>
-              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>The full price for this course is <strong><s>{sym}97</s></strong>.</p>
-              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>You&apos;re not going to pay that today. And the reason is simple.</p>
-              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>This is the first time I&apos;ve offered this course to the public. I want <strong>50 people</strong> to go through it. I want to read your emails, see your mandalas, find out where you get stuck and where you surprise yourself.</p>
-              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>That feedback is worth more to me right now than charging full price. Honestly, I also need to find out if I can handle 50 support inboxes without accidentally spilling coffee on my sketchbook.</p>
-              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>So for this first group, the price is <strong>dramatically lower</strong>. Once those 50 spots fill, this page comes down and the full price goes live.</p>
+              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>Courses like this usually cost <strong><s>{sym}97</s></strong> or more.</p>
+              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>I keep mine lower on purpose.</p>
+              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>I picked up mandalas when I felt burned out and empty, and they gave me back a quiet hour every day. I want the price to be the easy part of starting, not the reason you put it off.</p>
+              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>So it&apos;s one payment of <strong>{sym}49.99</strong>, with lifetime access to every lesson. You just read what a few students made with it. Your first mandala is next.</p>
             </div>
             <div className="checkout-box" style={{ maxWidth: 520, margin: '0 auto', padding: '40px 44px', borderRadius: 14, border: '2px solid rgba(45,74,143,0.25)', background: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', textAlign: 'center' }}>
-              <div className="price-old">Normally {sym}97</div>
+              <div className="price-old price-value">A {sym}97 value</div>
               <p id="get-access" className="now-only" style={{ fontSize: 44, color: 'var(--ink)', fontWeight: 700, marginBottom: 8 }}>Now Only <span style={{ color: '#2d4a8f' }}>{sym}49.99</span></p>
               <div className="price-note">One time payment. <span className="lifetime-break" />Lifetime access.</div>
               <div style={{ marginTop: 20 }}><CheckoutButton /></div>
@@ -610,7 +615,7 @@ export default async function Home() {
           </section>
 
           <div className="checkout-box" style={{ maxWidth: 520, margin: '0 auto', padding: '40px 44px', borderRadius: 14, border: '2px solid rgba(45,74,143,0.25)', background: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', textAlign: 'center' }}>
-            <div className="price-old">Normally {sym}97</div>
+            <div className="price-old price-value">A {sym}97 value</div>
             <p className="now-only" style={{ fontSize: 44, color: 'var(--ink)', fontWeight: 700, marginBottom: 8 }}>Now Only <span style={{ color: '#2d4a8f' }}>{sym}49.99</span></p>
             <div className="price-note">One time payment. <span className="lifetime-break" />Lifetime access.</div>
             <div style={{ marginTop: 20 }}><CheckoutButton /></div>
@@ -674,7 +679,7 @@ export default async function Home() {
           </section>
 
           <div className="checkout-box" style={{ maxWidth: 520, margin: '0 auto', padding: '40px 44px', borderRadius: 14, border: '2px solid rgba(45,74,143,0.25)', background: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', textAlign: 'center' }}>
-            <div className="price-old">Normally {sym}97</div>
+            <div className="price-old price-value">A {sym}97 value</div>
             <p className="now-only" style={{ fontSize: 44, color: 'var(--ink)', fontWeight: 700, marginBottom: 8 }}>Now Only <span style={{ color: '#2d4a8f' }}>{sym}49.99</span></p>
             <div className="price-note">One time payment. <span className="lifetime-break" />Lifetime access.</div>
             <div style={{ marginTop: 20 }}><CheckoutButton /></div>
