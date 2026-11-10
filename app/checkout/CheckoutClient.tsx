@@ -174,7 +174,7 @@ export default function CheckoutClient() {
 
         .checkout-container {
           width: 100%;
-          max-width: 960px;
+          max-width: 1040px;
           display: flex;
           border-radius: 12px;
           overflow: hidden;
@@ -377,6 +377,7 @@ export default function CheckoutClient() {
           grid-template-areas:
             "check image headline"
             "check image sub";
+          grid-template-rows: auto 1fr;
           column-gap: 14px;
           row-gap: 4px;
           padding: 16px;
@@ -409,8 +410,8 @@ export default function CheckoutClient() {
 
         .order-bump .bump-image {
           grid-area: image;
-          width: 84px;
-          height: 84px;
+          width: 116px;
+          height: 116px;
           object-fit: cover;
           border-radius: 6px;
           background: #ffffff;
@@ -445,11 +446,12 @@ export default function CheckoutClient() {
             grid-template-areas:
               "check headline image"
               "sub   sub      sub";
+            grid-template-rows: auto auto;
             row-gap: 10px;
           }
           .order-bump .bump-image {
-            width: 84px;
-            height: 84px;
+            width: 100px;
+            height: 100px;
             justify-self: end;
             align-self: center;
           }
@@ -489,7 +491,7 @@ export default function CheckoutClient() {
           grid-area: image;
           align-self: center;
           justify-self: center;
-          width: 84px;
+          width: 116px;
           padding: 10px 0;
           border-radius: 6px;
           background: #16a34a;
@@ -498,6 +500,10 @@ export default function CheckoutClient() {
           font-weight: 800;
           text-align: center;
           line-height: 1.2;
+        }
+
+        @media (max-width: 768px) {
+          .order-bump .bundle-badge { width: 100px; }
         }
 
         .bundle-line-item .item-name,
