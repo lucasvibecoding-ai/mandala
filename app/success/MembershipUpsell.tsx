@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-// The Aiko Arts membership offer on the thank-you page: all courses for $25/€25 a month
-// (kept while they stay) for 30 minutes after the course payment. aikoarts.com decides
-// everything (who sees it, the price, the real time limit, the charge); this only shows
+// The Aiko Arts membership offer on the thank-you page: all courses for $9.99/€9.99 a
+// month (owner 2026-11-10), every course's artwork on show, no countdown (it is the normal
+// price; the one click is only possible here, right after the course payment). aikoarts.com
+// decides everything (who sees it, the price, the time limit, the charge); this only shows
 // it. Card buyers say yes in one click (the card they just used); PayPal buyers get a
 // short secure Stripe page. After a yes they go straight to setting up their account.
 // The same file is on every course site.
@@ -14,7 +15,12 @@ type Course = { slug: string; title: string; thumbnail: string | null; minutes: 
 type Offer = {
   show: true;
   price: string;
-  regularPrice: string;
+  /** Struck-through old price; omitted when the price shown is the normal one. */
+  regularPrice?: string;
+  /** Every course bought one by one (e.g. "$705"), the honest anchor for the monthly price. */
+  libraryValue?: string;
+  /** false = no countdown (the price is the normal one, so there is nothing to run out). */
+  timer?: boolean;
   msLeft: number;
   total: number;
   hours: number;
@@ -151,17 +157,27 @@ export default function MembershipUpsell({
   const s = Math.floor((left % 60000) / 1000);
   const label = offer.oneClick ? `Yes, add all ${offer.total} courses` : `Get all ${offer.total} for ${offer.price}/month`;
   const sub = offer.oneClick ? 'Charged to the card you just used' : 'Secure payment by Stripe: card, Apple Pay or Google Pay';
-  const pics = offer.courses.filter((c) => c.thumbnail).slice(0, 8);
+  // Every course's artwork, so they see what they'll be able to make.
+  const pics = offer.courses.filter((c) => c.thumbnail);
 
   return (
     <>
       <style>{css}</style>
       <div style={card} className="aa-up">
         <div style={top}>
-          <span>A special offer for you</span>
-          <span style={timer} role="timer">
-            ⏱ Ends in <b style={{ fontSize: 16, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>{m}:{String(s).padStart(2, '0')}</b>
-          </span>
+          {offer.timer === false ? (
+            <>
+              <span>One more thing</span>
+              <span style={timer}>One click, only on this page</span>
+            </>
+          ) : (
+            <>
+              <span>A special offer for you</span>
+              <span style={timer} role="timer">
+                ⏱ Ends in <b style={{ fontSize: 16, marginLeft: 4, fontVariantNumeric: 'tabular-nums' }}>{m}:{String(s).padStart(2, '0')}</b>
+              </span>
+            </>
+          )}
         </div>
         <button type="button" onClick={() => setShowAll(true)} style={gallery} aria-label={`See all ${offer.total} courses`}>
           <span className="aa-up-grid">
@@ -177,8 +193,14 @@ export default function MembershipUpsell({
           <div style={priceBox}>
             <b style={{ fontSize: 50, lineHeight: 1, color: ORANGE, letterSpacing: '-0.02em' }}>{offer.price}</b>
             <span style={{ fontSize: 18, fontWeight: 600, color: INK }}>/month</span>
-            <s style={was}>{offer.regularPrice}</s>
+            {offer.regularPrice && <s style={was}>{offer.regularPrice}</s>}
           </div>
+          {offer.libraryValue && (
+            <p style={{ margin: 0, color: INK, fontSize: 17, fontWeight: 600, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+              All {offer.total} courses one by one:
+              <s style={{ ...was, fontSize: 24, fontWeight: 700 }}>{offer.libraryValue}</s>
+            </p>
+          )}
           <p style={{ margin: 0, color: MUTED, fontSize: 15 }}>Every course, plus every new one. Cancel anytime.</p>
           <button type="button" onClick={yes} disabled={state === 'busy'} style={yesBtn} className="aa-up-pulse">
             {state === 'busy' ? 'One moment...' : label}
@@ -221,7 +243,8 @@ export default function MembershipUpsell({
             </ul>
             <div style={sheetFoot}>
               <span style={{ color: INK }}>
-                <b>{offer.price}/month</b> <s style={{ ...was, fontSize: 15 }}>{offer.regularPrice}</s> · cancel anytime
+                <b>{offer.price}/month</b>{' '}
+                {offer.regularPrice && <s style={{ ...was, fontSize: 15 }}>{offer.regularPrice}</s>} · cancel anytime
               </span>
               <button type="button" onClick={yes} disabled={state === 'busy'} style={{ ...yesBtn, width: 'auto', padding: '12px 22px' }} className="aa-up-pulse">
                 {state === 'busy' ? 'One moment...' : label}
@@ -361,8 +384,8 @@ const sheetFoot: React.CSSProperties = {
   textAlign: 'left',
 };
 const css = `
-.aa-up-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px }
-.aa-up-grid img { width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block }
+.aa-up-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px }
+.aa-up-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block }
 .aa-up-all { list-style: none; margin: 0; padding: 18px 24px 24px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; text-align: left }
 .aa-up-all li { position: relative; border: 1px solid #e7e3dc; border-radius: 10px; overflow: hidden; background: #fff }
 .aa-up-all img, .aa-up-ph { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; background: #eee }
@@ -374,7 +397,7 @@ const css = `
 .aa-up-pulse:disabled { animation: none; opacity: .7 }
 @media (max-width: 760px) { .aa-up-all { grid-template-columns: repeat(3, minmax(0, 1fr)) } }
 @media (max-width: 480px) {
-  .aa-up-grid { grid-template-columns: repeat(3, 1fr) } .aa-up-grid img:nth-child(n+7) { display: none }
+  .aa-up-grid { grid-template-columns: repeat(3, 1fr) }
   .aa-up-all { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px 16px 18px }
 }
 @media (prefers-reduced-motion: reduce) { .aa-up-pulse { animation: none } }
