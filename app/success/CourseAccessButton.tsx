@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import MembershipUpsell from './MembershipUpsell';
+import OtherCourses from './OtherCourses';
 
 // Add-on: fetches the buyer's one-click course access link from the just-completed
 // payment and shows a button, so they can log in without opening the email.
@@ -14,7 +14,6 @@ export default function CourseAccessButton() {
   const redirectStatus = sp.get('redirect_status');
   const paypalOrder = sp.get('paypal_order');
   const clientSecret = sp.get('payment_intent_client_secret');
-  const joinedMembership = sp.get('membership') === 'joined';
 
   const [status, setStatus] = useState<'loading' | 'ready' | 'hidden'>('loading');
   const [actionUrl, setActionUrl] = useState('');
@@ -62,17 +61,18 @@ export default function CourseAccessButton() {
     };
   }, [paymentIntent, redirectStatus, paypalOrder]);
 
-  // The Aiko Arts membership offer sits under the access card (it decides itself whether to show).
-  const upsell = (
-    <MembershipUpsell
+  // Under the access card: a mention of Aiko's other courses (owner 2026-11-11: no offer).
+  // Asked only once the course is granted, so aikoarts.com knows which ones they have.
+  const others = (
+    <OtherCourses
       paymentIntent={redirectStatus === 'succeeded' ? paymentIntent : null}
       clientSecret={clientSecret}
       actionUrl={actionUrl}
-      joinedFromCheckout={joinedMembership}
+      isNewUser={isNewUser}
     />
   );
 
-  if (status === 'hidden') return upsell;
+  if (status === 'hidden') return null;
 
   if (status === 'loading') {
     return (
@@ -116,7 +116,7 @@ export default function CourseAccessButton() {
           We also emailed you this link, so you can get back in anytime.
         </p>
       </div>
-      {upsell}
+      {others}
     </>
   );
 }
