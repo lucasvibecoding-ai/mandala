@@ -58,6 +58,10 @@ export default function WalletExpress({
       onClick={onClick}
       options={{
         paymentMethods: {
+          // Show Apple Pay and Google Pay in every browser that supports them (owner 2026-11-17), e.g. Apple Pay in
+          // Chrome, and Google Pay without a saved card. Stripe's default ('auto') shows Apple Pay in Safari only.
+          applePay: 'always',
+          googlePay: 'always',
           paypal: 'never',
           amazonPay: 'never',
         },
