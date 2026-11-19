@@ -41,8 +41,9 @@ export async function paypalAccessToken(): Promise<string> {
     },
     body: 'grant_type=client_credentials',
   });
-  const data = (await res.json()) as { access_token?: string };
-  if (!data.access_token) throw new Error('PayPal auth failed');
+  const data = (await res.json()) as { access_token?: string; error?: string; error_description?: string };
+  // PayPal's own words go into the error, so a refused key (invalid_client) reaches the admin.
+  if (!data.access_token) throw new Error(`PayPal auth failed: ${data.error ?? res.status} ${data.error_description ?? ''}`.trim());
   return data.access_token;
 }
 
@@ -77,5 +78,24 @@ export async function reportPaypalDirectSale(): Promise<void> {
     });
   } catch (err) {
     console.error('paypal-direct after-sale error:', err);
+  }
+}
+
+/**
+ * PayPal refused a real buyer's order (owner, 2026-11-19: no more test orders, ever). Sends PayPal's
+ * answer to the admin, which hides this PayPal account's button only when PayPal says the account is
+ * restricted, locked or closed, or refuses the keys. Never throws.
+ */
+export async function reportPaypalRefusal(detail: string, account: string | null = null): Promise<void> {
+  try {
+    const qs = `site=${encodeURIComponent(SITE)}${account ? `&account=${encodeURIComponent(account)}` : ''}`;
+    await fetch(`${LIMIT_API}/api/paypal-direct/refused?${qs}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.PAYPAL_DIRECT_SECRET}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ detail: detail.slice(0, 2000) }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (err) {
+    console.error('paypal-direct refused report error:', err);
   }
 }

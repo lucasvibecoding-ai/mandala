@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { currencyForCountry } from '../../../../lib/pricing';
-import { PAYPAL_API, PAYPAL_DIRECT, PAYPAL_PRODUCT, paypalAccessToken, paypalDirectOpen } from '../../../../lib/paypal-direct';
+import { PAYPAL_API, PAYPAL_DIRECT, PAYPAL_PRODUCT, paypalAccessToken, paypalDirectOpen, reportPaypalRefusal } from '../../../../lib/paypal-direct';
 
 // Direct PayPal (lib/paypal-direct.ts): creates the PayPal order the SDK button opens;
 // /api/paypal/capture-order finishes it and fulfils the sale. The amounts mirror the card
@@ -59,11 +59,14 @@ export async function POST(request: Request) {
     const data = await res.json();
     if (!data.id) {
       console.error('PayPal create order returned no id:', data);
+      // A real buyer was refused: the admin hides the button if PayPal blames the account itself.
+      await reportPaypalRefusal(`PayPal create order: ${JSON.stringify(data)}`);
       return NextResponse.json({ error: 'Failed to create PayPal order' }, { status: 502 });
     }
     return NextResponse.json({ id: data.id });
   } catch (error) {
     console.error('PayPal create order error:', error);
+    await reportPaypalRefusal(error instanceof Error ? error.message : String(error));
     return NextResponse.json({ error: 'Failed to create PayPal order' }, { status: 500 });
   }
 }
