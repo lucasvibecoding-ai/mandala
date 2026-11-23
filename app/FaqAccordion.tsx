@@ -65,12 +65,12 @@ const faqs = [
   },
 ];
 
-export default function FaqAccordion() {
+export default function FaqAccordion({ items = faqs }: { items?: { q: string; a: string }[] } = {}) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <div className="faq-list">
-      {faqs.map((faq, i) => (
+      {items.map((faq, i) => (
         <div key={i} className="faq-item">
           <button
             className="faq-q"

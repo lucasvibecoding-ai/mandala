@@ -8,7 +8,7 @@ declare global {
   }
 }
 
-export default function CheckoutButton() {
+export default function CheckoutButton({ href = '/checkout', label }: { href?: string; label?: React.ReactNode } = {}) {
   const router = useRouter();
 
   const handleClick = () => {
@@ -25,7 +25,7 @@ export default function CheckoutButton() {
 
     navigator.sendBeacon('/api/track-checkout', JSON.stringify({ eventId }));
 
-    router.push('/checkout');
+    router.push(href);
   };
 
   return (
@@ -34,7 +34,7 @@ export default function CheckoutButton() {
       type="button"
       className="cta-btn text-white w-full md:w-auto px-12 sm:px-14 md:px-16 py-5 sm:py-7 md:py-9 rounded-lg text-xl sm:text-2xl md:text-3xl font-medium transition-all hover:shadow-lg cursor-pointer disabled:opacity-70 animate-pulse-glow leading-snug"
     >
-      Unlock Permanent<br />Access Now
+      {label ?? <>Unlock Permanent<br />Access Now</>}
     </button>
   );
 }
