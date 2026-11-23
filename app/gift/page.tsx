@@ -325,7 +325,7 @@ export default async function GiftPage() {
         .gift-section-bg { background: var(--bg-warm); border-radius: 20px; padding: 56px 48px !important; }
         @media (max-width: 860px) {
           .gift-steps { grid-template-columns: 1fr; }
-          .gift-two { flex-direction: column; gap: 32px; }
+          .gift-two { flex-direction: column; gap: 32px; } .gift-two > div { width: 100%; }
           .gift-section-bg { padding: 40px 22px !important; border-radius: 14px; }
         }
         @media (max-width: 480px) {
