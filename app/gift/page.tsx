@@ -7,6 +7,7 @@ import GiftBar from "./GiftBar";
 import GiftCard from "./GiftCard";
 import { headers } from "next/headers";
 import { currencyForCountry, currencySymbol } from "../../lib/pricing";
+import { BF_ANCHOR, BlackFridayTag, isBlackFriday } from "../../lib/black-friday";
 
 export const metadata: Metadata = {
   title: "Mandala Masterclass: Gift Someone You Love A Calm New Hobby",
@@ -56,7 +57,7 @@ export default async function GiftPage() {
   );
   const priceBox = (id?: string) => (
     <div id={id} className="checkout-box" style={{ maxWidth: 520, margin: '0 auto', padding: '40px 44px', borderRadius: 14, border: '2px solid rgba(199,145,91,0.45)', background: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', textAlign: 'center' }}>
-      <div className="price-old price-value">A {sym}97 value</div>
+      {bf ? <><BlackFridayTag /><div className="price-old">{sym}{BF_ANCHOR}</div></> : <div className="price-old price-value">A {sym}97 value</div>}
       <p className="now-only" style={{ fontSize: 44, color: 'var(--ink)', fontWeight: 700, marginBottom: 8 }}>Gift it for <span style={{ color: '#2d4a8f' }}>{sym}49.99</span></p>
       <div className="price-note">One time payment. <span className="lifetime-break" />Lifetime access for them.</div>
       <div style={{ marginTop: 20 }}><CheckoutButton href="/checkout?gift=1" label={<>Give This Gift</>} /></div>
@@ -76,6 +77,7 @@ export default async function GiftPage() {
     </div>
   );
 
+  const bf = isBlackFriday();
   return (
     <main className="overflow-hidden">
       <GiftBar />

@@ -6,6 +6,7 @@ import CountdownBar from "./CountdownBar";
 import FaqAccordion from "./FaqAccordion";
 import { headers } from "next/headers";
 import { currencyForCountry, currencySymbol } from "../lib/pricing";
+import { BF_ANCHOR, BlackFridayBar, BlackFridayTag, isBlackFriday } from "../lib/black-friday";
 
 export const metadata: Metadata = {
   title: "Mandala: Learn The Ancient Art Of Meditative Circle Drawing",
@@ -18,8 +19,10 @@ export default async function Home() {
   const sym = currencySymbol(
     currencyForCountry((await headers()).get("x-vercel-ip-country"))
   );
+  const bf = isBlackFriday();
   return (
     <main className="overflow-hidden">
+      {bf && <BlackFridayBar sym={sym} />}
       <CountdownBar />
 
       <style dangerouslySetInnerHTML={{ __html: `
@@ -516,13 +519,13 @@ export default async function Home() {
           <section style={{ padding: '56px 0' }}>
             <div className="bonsai-center" style={{ marginBottom: 32 }}>
               <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>You&apos;ve seen what&apos;s inside. Five modules. A complete system for learning, creating, and mastering mandala art at home.</p>
-              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>Courses like this usually cost <strong><s>{sym}97</s></strong> or more.</p>
+              <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>Courses like this usually cost <strong><s>{sym}{bf ? BF_ANCHOR : 97}</s></strong> or more.</p>
               <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>I keep mine lower on purpose.</p>
               <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>I picked up mandalas when I felt burned out and empty, and they gave me back a quiet hour every day. I want the price to be the easy part of starting, not the reason you put it off.</p>
               <p style={{ maxWidth: 720, textAlign: 'left', fontSize: 24, margin: '0 auto 20px' }}>So it&apos;s one payment of <strong>{sym}49.99</strong>, with lifetime access to every lesson. You just read what a few students made with it. Your first mandala is next.</p>
             </div>
             <div className="checkout-box" style={{ maxWidth: 520, margin: '0 auto', padding: '40px 44px', borderRadius: 14, border: '2px solid rgba(45,74,143,0.25)', background: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', textAlign: 'center' }}>
-              <div className="price-old price-value">A {sym}97 value</div>
+              {bf ? <><BlackFridayTag /><div className="price-old">{sym}{BF_ANCHOR}</div></> : <div className="price-old price-value">A {sym}97 value</div>}
               <p id="get-access" className="now-only" style={{ fontSize: 44, color: 'var(--ink)', fontWeight: 700, marginBottom: 8 }}>Now Only <span style={{ color: '#2d4a8f' }}>{sym}49.99</span></p>
               <div className="price-note">One time payment. <span className="lifetime-break" />Lifetime access.</div>
               <div style={{ marginTop: 20 }}><CheckoutButton /></div>
@@ -614,7 +617,7 @@ export default async function Home() {
           </section>
 
           <div className="checkout-box" style={{ maxWidth: 520, margin: '0 auto', padding: '40px 44px', borderRadius: 14, border: '2px solid rgba(45,74,143,0.25)', background: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', textAlign: 'center' }}>
-            <div className="price-old price-value">A {sym}97 value</div>
+            {bf ? <><BlackFridayTag /><div className="price-old">{sym}{BF_ANCHOR}</div></> : <div className="price-old price-value">A {sym}97 value</div>}
             <p className="now-only" style={{ fontSize: 44, color: 'var(--ink)', fontWeight: 700, marginBottom: 8 }}>Now Only <span style={{ color: '#2d4a8f' }}>{sym}49.99</span></p>
             <div className="price-note">One time payment. <span className="lifetime-break" />Lifetime access.</div>
             <div style={{ marginTop: 20 }}><CheckoutButton /></div>
@@ -677,7 +680,7 @@ export default async function Home() {
           </section>
 
           <div className="checkout-box" style={{ maxWidth: 520, margin: '0 auto', padding: '40px 44px', borderRadius: 14, border: '2px solid rgba(45,74,143,0.25)', background: '#ffffff', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', textAlign: 'center' }}>
-            <div className="price-old price-value">A {sym}97 value</div>
+            {bf ? <><BlackFridayTag /><div className="price-old">{sym}{BF_ANCHOR}</div></> : <div className="price-old price-value">A {sym}97 value</div>}
             <p className="now-only" style={{ fontSize: 44, color: 'var(--ink)', fontWeight: 700, marginBottom: 8 }}>Now Only <span style={{ color: '#2d4a8f' }}>{sym}49.99</span></p>
             <div className="price-note">One time payment. <span className="lifetime-break" />Lifetime access.</div>
             <div style={{ marginTop: 20 }}><CheckoutButton /></div>
