@@ -16,7 +16,7 @@ export default function CardForm({
 }: {
   email: string;
   emailValid: boolean;
-  ensurePIAmountSynced?: () => Promise<boolean | void>;
+  ensurePIAmountSynced?: () => Promise<void>;
   totalLabel: string;
 }) {
   const stripe = useStripe();
@@ -35,11 +35,7 @@ export default function CardForm({
     setCardError('');
     setIsProcessing(true);
 
-    if ((await ensurePIAmountSynced?.()) === false) {
-      setCardError('Something went wrong saving the gift details. Please try again.');
-      setIsProcessing(false);
-      return;
-    }
+    await ensurePIAmountSynced?.();
 
     const { error } = await stripe.confirmPayment({
       elements,

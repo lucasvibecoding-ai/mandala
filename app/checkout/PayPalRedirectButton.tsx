@@ -33,7 +33,7 @@ export default function PayPalRedirectButton({
   email: string;
   emailValid: boolean;
   clientSecret: string;
-  ensurePIAmountSynced?: () => Promise<boolean | void>;
+  ensurePIAmountSynced?: () => Promise<void>;
   onEmailError: () => void;
   onError: (msg: string) => void;
 }) {
@@ -49,11 +49,7 @@ export default function PayPalRedirectButton({
 
     setIsProcessing(true);
 
-    if ((await ensurePIAmountSynced?.()) === false) {
-      onError('Something went wrong saving the gift details. Please try again.');
-      setIsProcessing(false);
-      return;
-    }
+    await ensurePIAmountSynced?.();
 
     // Attach the buyer's email as billing details (NOT receipt_email), mirroring the card flow,
     // so the webhook / course-access can resolve it from the charge.

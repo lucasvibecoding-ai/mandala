@@ -19,7 +19,7 @@ export default function WalletExpress({
 }: {
   emailValid: boolean;
   onEmailError: () => void;
-  ensurePIAmountSynced?: () => Promise<boolean | void>;
+  ensurePIAmountSynced?: () => Promise<void>;
   onError: (msg: string) => void;
   /** Bumped by the checkout each time the PaymentIntent amount changes on the server. */
   syncVersion?: number;
@@ -35,10 +35,7 @@ export default function WalletExpress({
 
   const onConfirm = async () => {
     if (!stripe || !elements) return;
-    if ((await ensurePIAmountSynced?.()) === false) {
-      onError('Something went wrong saving the gift details. Please try again.');
-      return;
-    }
+    await ensurePIAmountSynced?.();
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: `${window.location.origin}/success` },
@@ -51,10 +48,7 @@ export default function WalletExpress({
       onEmailError();
       return;
     }
-    if ((await ensurePIAmountSynced?.()) === false) {
-      onError('Something went wrong saving the gift details. Please try again.');
-      return;
-    }
+    await ensurePIAmountSynced?.();
     event.resolve({ emailRequired: true });
   };
 
