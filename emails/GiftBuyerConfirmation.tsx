@@ -99,7 +99,7 @@ export default function GiftBuyerConfirmation({
             If you run into any trouble, just reply to this email and I&apos;ll help you out.
           </Text>
 
-          <Text style={signature}>Aiko Mori</Text>
+          <Text style={signature}>Aiko</Text>
 
           {invoiceUrl && (
             <>
