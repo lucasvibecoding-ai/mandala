@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { COURSE_PRICE_CENTS, UPSELL_COURSE_SLUG, extrasCents } from '../../../lib/pricing';
+import { giftMetadata } from '../../../lib/gift';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-02-25.clover',
@@ -17,6 +18,8 @@ export async function POST(request: Request) {
       includeBump?: boolean;
       includeCourse?: boolean;
       email?: string;
+      // Gift checkout: the gift details (null = a "for me" order, clears any earlier gift).
+      gift?: Record<string, unknown> | null;
     };
     const piId = body.paymentIntentId;
     const includeBump = body.includeBump === true;
@@ -45,11 +48,15 @@ export async function POST(request: Request) {
 
     // Stripe MERGES metadata on update — omitting a key does NOT remove it. A key is
     // only unset by posting an empty string, so untick must send includes_addon: ''.
+    // A gift's "any additional Aiko Arts course" is a free-course credit for the recipient
+    // ('any'), not the fixed upsell course.
+    const isGift = !!body.gift;
     const updated = await stripe.paymentIntents.update(piId, {
       amount,
       metadata: {
         includes_addon: includeBump ? 'mandala-pack' : '',
-        includes_course: includeCourse ? UPSELL_COURSE_SLUG : '',
+        includes_course: includeCourse ? (isGift ? 'any' : UPSELL_COURSE_SLUG) : '',
+        ...('gift' in body ? giftMetadata(body.gift ?? null) : {}),
       },
     });
 

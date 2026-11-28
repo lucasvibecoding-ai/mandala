@@ -9,6 +9,16 @@ import { recordPurchase } from '../../../lib/airtable';
 import { createFiscalInvoiceWithin } from '../../../lib/eracuni';
 import { resolveBuyerCountry } from '../../../lib/vat-country';
 import { UPSELL_COURSE_NAME } from '../../../lib/pricing';
+import GiftBuyerConfirmation from '../../../emails/GiftBuyerConfirmation';
+import { recordGiftFields } from '../../../lib/airtable';
+import {
+  GIFT_SITE,
+  giftFromMetadata,
+  registerGift,
+  reportGiftSend,
+  sendGiftEmail,
+  type GiftOrder,
+} from '../../../lib/gift';
 
 // Allow the background fulfillment (below) to run up to 60s — the Vercel Hobby cap.
 export const maxDuration = 60;
@@ -103,6 +113,119 @@ async function postVatSale(payload: Record<string, unknown>): Promise<void> {
   } catch (err) {
     console.error('vat-counter ingest error:', err);
   }
+}
+
+// A GIFT order (owner 2026-11-23): the buyer gets a receipt, never the course. The gift is
+// registered on the platform (one-use link, send time) and emailed to the recipient now, or later
+// by the platform's cron through /api/gift/deliver. Returns when it went out (null = later).
+async function fulfillGift(args: {
+  pi: Stripe.PaymentIntent;
+  order: GiftOrder;
+  buyerEmail: string;
+  invoiceUrl?: string;
+  addonSlug: string | null;
+  extraCourse: boolean;
+  proofEmails: ProofEvent[];
+}): Promise<{ sendAt: Date; sentAt: Date | null }> {
+  const { pi, order, buyerEmail, proofEmails } = args;
+  let sendAt = order.sendAt ? new Date(order.sendAt) : new Date();
+  let sentAt: Date | null = null;
+  try {
+    const reg = await registerGift({
+      orderId: pi.id,
+      order,
+      buyerEmail,
+      addonSlug: args.addonSlug,
+      extraCourse: args.extraCourse,
+    });
+    sendAt = new Date(reg.sendAt);
+    if (reg.sent) sentAt = new Date();
+    if (reg.sendNow) {
+      try {
+        const emailId = await sendGiftEmail({
+          code: reg.code,
+          giftUrl: reg.giftUrl,
+          orderId: pi.id,
+          courseSlug: GIFT_SITE.courseSlug,
+          recipientName: order.recipientName,
+          recipientEmail: order.recipientEmail,
+          senderName: order.senderName,
+          message: order.message,
+          addonSlug: args.addonSlug,
+          extraCourse: args.extraCourse,
+        });
+        sentAt = new Date();
+        await reportGiftSend(reg.code, { emailId });
+        proofEmails.push({
+          eventId: `gift-email:${pi.id}`,
+          kind: 'email.sent',
+          orderId: pi.id,
+          courseSlug: GIFT_SITE.courseSlug,
+          email: order.recipientEmail,
+          data: { resendId: emailId, role: 'gift-recipient', subject: 'gift email' },
+        });
+      } catch (err) {
+        const error = err instanceof Error ? err.message : String(err);
+        console.error('gift email failed (the platform cron retries):', error);
+        await reportGiftSend(reg.code, { error });
+      }
+    }
+  } catch (err) {
+    // The platform could not take the gift: nothing would ever reach the recipient, so the
+    // shop inbox gets an alert to sort it by hand. The buyer still gets the receipt.
+    const reason = err instanceof Error ? err.message : String(err);
+    console.error('GIFT NOT REGISTERED:', reason);
+    await resend.emails
+      .send({
+        from: GIFT_SITE.from,
+        to: GIFT_SITE.replyTo,
+        subject: `GIFT NOT REGISTERED: order ${pi.id}`,
+        text: [
+          `A gift was paid but the course platform did not take it, so no gift email will go out.`,
+          `Order: ${pi.id}`,
+          `Buyer: ${buyerEmail}`,
+          `Recipient: ${order.recipientName} <${order.recipientEmail}>`,
+          `Send: ${order.sendLocal || 'immediately'} (${order.sendAt || 'now'})`,
+          `Reason: ${reason}`,
+        ].join('\n'),
+      })
+      .catch(() => {});
+  }
+
+  // The buyer's receipt (no gift link: the gift goes straight to the recipient).
+  try {
+    const html = await render(
+      GiftBuyerConfirmation({
+        senderName: order.senderName,
+        recipientName: order.recipientName,
+        recipientEmail: order.recipientEmail,
+        scheduledFor: sentAt ? undefined : order.sendLocal || undefined,
+        extraCourse: args.extraCourse,
+        pack: !!args.addonSlug,
+        invoiceUrl: args.invoiceUrl,
+        materialsUrl: `${GIFT_SITE.siteUrl}/materials`,
+      }),
+    );
+    const subject = 'Your gift is all set';
+    const result = await resend.emails.send({
+      from: GIFT_SITE.from,
+      to: buyerEmail,
+      replyTo: GIFT_SITE.replyTo,
+      subject,
+      html,
+    });
+    proofEmails.push({
+      eventId: `email:${pi.id}:${buyerEmail}`,
+      kind: result.error ? 'email.failed' : 'email.sent',
+      orderId: pi.id,
+      courseSlug: GIFT_SITE.courseSlug,
+      email: buyerEmail,
+      data: { resendId: result.data?.id ?? null, subject, role: 'gift-buyer', error: result.error?.message ?? null },
+    });
+  } catch (err) {
+    console.error('gift buyer email failed:', err);
+  }
+  return { sendAt, sentAt };
 }
 
 export async function POST(request: Request) {
@@ -204,10 +327,14 @@ export async function POST(request: Request) {
             ? paymentIntent.metadata.includes_addon
             : null;
         // The second course bought as the checkout upsell (platform slug), or null.
-        const upsellSlug =
+        const upsellRaw =
           typeof paymentIntent.metadata?.includes_course === 'string' && paymentIntent.metadata.includes_course
             ? paymentIntent.metadata.includes_course
             : null;
+        // A gift's "any additional course" ('any') is a free-course credit, not a course slug.
+        const upsellSlug = upsellRaw === 'any' ? null : upsellRaw;
+        // Gift order: the course goes to the recipient (fulfillGift), never to the buyer.
+        const giftOrder = giftFromMetadata(paymentIntent.metadata);
 
         // Grant access and create the fiscal invoice in parallel. The invoice call retries
         // until it succeeds or the deadline, so the email waits for the invoice (up to
@@ -245,8 +372,10 @@ export async function POST(request: Request) {
         };
 
         const [access, secondaryAccess, invoice] = await Promise.all([
-          grantAll(primaryEmail, false),
-          secondaryEmail ? grantAll(secondaryEmail, true) : Promise.resolve(null),
+          giftOrder
+            ? Promise.resolve({} as { setupUrl?: string; loginUrl?: string })
+            : grantAll(primaryEmail, false),
+          secondaryEmail && !giftOrder ? grantAll(secondaryEmail, true) : Promise.resolve(null),
           createFiscalInvoiceWithin(
             {
               apiTransactionId: paymentIntent.id,
@@ -257,7 +386,7 @@ export async function POST(request: Request) {
               currency: (paymentIntent.currency || 'eur').toUpperCase(),
               methodOfPayment: 'Stripe',
               includeAddon: !!addonSlug,
-              includeCourse: !!upsellSlug,
+              includeCourse: !!upsellRaw,
               buyerCountry,
             },
             INVOICE_DEADLINE_MS,
@@ -270,12 +399,25 @@ export async function POST(request: Request) {
         // One confirmation per address, each carrying its own access link, so either
         // inbox is a complete route into the course. Sent one at a time: a failure on
         // the second address must never lose the first.
-        const recipients: { email: string; access: { setupUrl?: string; loginUrl?: string } }[] = [
-          { email: toEmail, access },
-          ...(secondaryEmail && secondaryAccess
-            ? [{ email: secondaryEmail, access: secondaryAccess }]
-            : []),
-        ];
+        const gift = giftOrder
+          ? await fulfillGift({
+              pi: paymentIntent,
+              order: giftOrder,
+              buyerEmail: toEmail,
+              invoiceUrl: !payerEmail || toEmail === payerEmail ? invoice?.publicUrl : undefined,
+              addonSlug,
+              extraCourse: upsellRaw === 'any',
+              proofEmails,
+            })
+          : null;
+        const recipients: { email: string; access: { setupUrl?: string; loginUrl?: string } }[] = giftOrder
+          ? []
+          : [
+              { email: toEmail, access },
+              ...(secondaryEmail && secondaryAccess
+                ? [{ email: secondaryEmail, access: secondaryAccess }]
+                : []),
+            ];
         for (const recipient of recipients) {
           // The fiscal invoice is made out to the PAYER, so its link only ever goes
           // to that address (user, 2026-09-01). The other inbox gets access, not
@@ -371,7 +513,10 @@ export async function POST(request: Request) {
               payerName: customerName,
               product: 'Mandala Masterclass',
               addon: addonSlug ?? null,
-              upsellCourse: upsellSlug,
+              upsellCourse: upsellRaw,
+              gift: giftOrder
+                ? { to: giftOrder.recipientEmail, name: giftOrder.recipientName, sendAt: giftOrder.sendAt || 'now' }
+                : null,
               chargeId: stripeProof?.chargeId ?? null,
               receiptUrl: stripeProof?.receiptUrl ?? null,
             },
@@ -394,6 +539,15 @@ export async function POST(request: Request) {
             secondEmail: secondaryEmail ? primaryEmail : null,
             includeAddon: !!addonSlug,
           });
+          if (giftOrder && gift) {
+            await recordGiftFields(paymentIntent.id, {
+              to: giftOrder.recipientEmail,
+              name: giftOrder.recipientName,
+              sendAt: gift.sendAt,
+              sendLocal: giftOrder.sendLocal,
+              sentAt: gift.sentAt,
+            });
+          }
         }
 
         // Server-side CAPI Purchase event

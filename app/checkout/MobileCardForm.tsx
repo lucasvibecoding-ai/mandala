@@ -47,7 +47,7 @@ export default function MobileCardForm({
   email: string;
   emailValid: boolean;
   clientSecret: string;
-  ensurePIAmountSynced?: () => Promise<void>;
+  ensurePIAmountSynced?: () => Promise<boolean | void>;
   totalLabel: string;
 }) {
   const stripe = useStripe();
@@ -68,7 +68,11 @@ export default function MobileCardForm({
     setCardError('');
     setIsProcessing(true);
 
-    await ensurePIAmountSynced?.();
+    if ((await ensurePIAmountSynced?.()) === false) {
+      setCardError('Something went wrong saving the gift details. Please try again.');
+      setIsProcessing(false);
+      return;
+    }
 
     const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
       payment_method: {

@@ -184,3 +184,47 @@ export async function recordPurchase(input: RecordPurchaseInput): Promise<void> 
     console.error('Airtable recordPurchase error:', err);
   }
 }
+
+// ---- Gift orders (owner 2026-11-23): the gift columns in Purchases, written AFTER the purchase
+// row exists and in their own request, so a missing column can never cost the purchase row.
+//   Gift (checkbox), Gift To (email), Gift Recipient Name, Gift Send At (date+time, GMT),
+//   Gift Send Local (text), Gift Sent (checkbox), Gift Sent At (date+time).
+
+export async function recordGiftFields(
+  transactionId: string,
+  gift: { to: string; name: string; sendAt: Date; sendLocal: string; sentAt: Date | null },
+): Promise<void> {
+  const config = getConfig();
+  if (!config) return;
+  try {
+    const id = await findPurchaseIdByTransactionId(config, transactionId);
+    if (!id) return;
+    await airtableFetch(config, `Purchases/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        fields: {
+          Gift: true,
+          'Gift To': gift.to,
+          'Gift Recipient Name': gift.name,
+          'Gift Send At': gift.sendAt.toISOString(),
+          'Gift Send Local': gift.sendLocal || 'Immediately',
+          'Gift Sent': !!gift.sentAt,
+          ...(gift.sentAt ? { 'Gift Sent At': gift.sentAt.toISOString() } : {}),
+        },
+      }),
+    });
+  } catch (err) {
+    console.error('Airtable gift fields failed (columns created yet?):', err);
+  }
+}
+
+export async function markGiftSentInAirtable(transactionId: string): Promise<void> {
+  const config = getConfig();
+  if (!config) return;
+  const id = await findPurchaseIdByTransactionId(config, transactionId);
+  if (!id) return;
+  await airtableFetch(config, `Purchases/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ fields: { 'Gift Sent': true, 'Gift Sent At': new Date().toISOString() } }),
+  });
+}

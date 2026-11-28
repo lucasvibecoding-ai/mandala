@@ -45,6 +45,8 @@ async function verifiedPurchase(body: {
     const pi = await stripe.paymentIntents.retrieve(body.paymentIntent);
     if (pi.status !== 'succeeded') return null;
     if (pi.metadata?.product_id !== process.env.STRIPE_PRODUCT_ID) return null;
+    // A gift: the course belongs to the recipient, so the buyer's thank-you page never logs them in.
+    if (pi.metadata?.gift === '1') return null;
     const addonSlug = pi.metadata?.includes_addon || null;
     const upsellSlug = pi.metadata?.includes_course || null;
     // Prefer the address the buyer typed at checkout (stashed on the PI while they
